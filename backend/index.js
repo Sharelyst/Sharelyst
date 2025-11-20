@@ -8,3 +8,22 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Connect to SQLite database
+const db = new sqlite3.Database("./database.db", (err) => {
+    if (err) {
+        console.error("Error opening database:", err.message);
+    }
+    else {
+        console.log("Connected to the SQLite database.");
+    }
+});
+
+
+// Define routes
+
+
+// Start the server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
