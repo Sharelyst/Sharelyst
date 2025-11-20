@@ -1,119 +1,50 @@
-# SharelystApp
+# Welcome to your Expo app 👋
 
-A [React Native](https://reactnative.dev) project bootstrapped with [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
----
+## Get started
 
-## Prerequisites
+1. Install dependencies
 
-Before you begin, ensure you have completed the [React Native Environment Setup](https://reactnative.dev/docs/set-up-your-environment) guide for your target platform(s).
+   ```bash
+   npm install
+   ```
 
----
+2. Start the app
 
-## Getting Started
+   ```bash
+   npx expo start
+   ```
 
-### 1. Install Dependencies
+In the output, you'll find options to open the app in a
 
-```bash
-# Using npm
-npm install
+- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
+- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
+- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
+- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
-# OR using Yarn
-yarn install
-```
+You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
-### 2. Start Metro Bundler
+## Get a fresh project
 
-Start the Metro JavaScript bundler:
-
-```bash
-# Using npm
-npm start
-
-# OR using Yarn
-yarn start
-```
-
-### 3. Run the Application
-
-Open a new terminal and run one of the following commands:
-
-#### **Android**
+When you're ready, run:
 
 ```bash
-# Using npm
-npm run android
-
-# OR using Yarn
-yarn android
+npm run reset-project
 ```
 
-#### **iOS**
+This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
-First, install CocoaPods dependencies (required on first setup or after updating native dependencies):
+## Learn more
 
-```bash
-# Install Ruby bundler (first time only)
-bundle install
+To learn more about developing your project with Expo, look at the following resources:
 
-# Install CocoaPods dependencies
-bundle exec pod install
-```
+- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
+- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
 
-Then run the app:
+## Join the community
 
-```bash
-# Using npm
-npm run ios
+Join our community of developers creating universal apps.
 
-# OR using Yarn
-yarn ios
-```
-
-> **Note**: You can also build and run directly from **Android Studio** or **Xcode**.
-
----
-
-## Development
-
-### Making Changes
-
-1. Open `App.tsx` in your editor
-2. Make your changes
-3. Save the file
-4. The app will automatically reload using [Fast Refresh](https://reactnative.dev/docs/fast-refresh)
-
-### Manual Reload
-
-To perform a full reload:
-
-- **Android**: Press <kbd>R</kbd> twice, or <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) / <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS) to open the Dev Menu
-- **iOS**: Press <kbd>R</kbd> in the iOS Simulator
-
----
-
-## Resources
-
-### Documentation
-- [React Native Documentation](https://reactnative.dev/docs/getting-started)
-- [Integration with Existing Apps](https://reactnative.dev/docs/integration-with-existing-apps)
-- [CocoaPods Getting Started](https://guides.cocoapods.org/using/getting-started.html)
-
-### Learning
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - Guided tour of React Native fundamentals
-- [React Native Blog](https://reactnative.dev/blog) - Latest updates and announcements
-
-### Community
-- [GitHub Repository](https://github.com/facebook/react-native) - Open source React Native repository
-
----
-
-## Troubleshooting
-
-If you encounter issues, please refer to the [React Native Troubleshooting Guide](https://reactnative.dev/docs/troubleshooting).
-
----
-
-## License
-
-This project was bootstrapped with React Native CLI.
+- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
+- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
