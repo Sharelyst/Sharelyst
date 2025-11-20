@@ -20,7 +20,9 @@ const db = new sqlite3.Database("./database.db", (err) => {
 
 
 // Define routes
-
+app.get("/", (req, res) => {
+    res.send("Welcome to the Sharelyst backend!");
+});
 
 // Start the server
 const PORT = process.env.PORT || 3000;
