@@ -1,11 +1,9 @@
 # SharelystApp
-
 A [React Native](https://reactnative.dev) project bootstrapped with [`@react-native-community/cli`](https://github.com/react-native-community/cli).
 
 ---
 
 ## Prerequisites
-
 Before you begin, ensure you have completed the [React Native Environment Setup](https://reactnative.dev/docs/set-up-your-environment) guide for your target platform(s).
 
 ---
