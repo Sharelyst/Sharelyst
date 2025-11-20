@@ -1,6 +1,8 @@
 # OSX
 #
 .DS_Store
+.AppleDouble
+.LSOverride
 
 # Xcode
 #
@@ -16,11 +18,14 @@ build/
 xcuserdata
 *.xccheckout
 *.moved-aside
+*.moved-aside
 DerivedData
 *.hmap
 *.ipa
 *.xcuserstate
 **/.xcode.env.local
+ios/.xcode.env.local
+project.xcworkspace
 
 # Android/IntelliJ
 #
@@ -40,6 +45,13 @@ local.properties
 node_modules/
 npm-debug.log
 yarn-error.log
+package-lock.json
+
+# BUCK
+buck-out/
+\.buckd/
+*.keystore
+!debug.keystore
 
 # fastlane
 #
@@ -53,18 +65,21 @@ yarn-error.log
 **/fastlane/screenshots
 **/fastlane/test_output
 
-# Bundle artifact
+# Bundle artifacts
 *.jsbundle
 
 # Ruby / CocoaPods
 **/Pods/
 /vendor/bundle/
+.bundle/
+Gemfile.lock
 
 # Temporary files created by Metro to check the health of the file watcher
 .metro-health-check*
 
 # testing
 /coverage
+*.lcov
 
 # Yarn
 .yarn/*
@@ -73,3 +88,32 @@ yarn-error.log
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# Expo (if using Expo)
+.expo/
+.expo-shared/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+
+# TypeScript
+*.tsbuildinfo
+
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Misc
+*.swp
+*.swo
+*~
+.tmp/
