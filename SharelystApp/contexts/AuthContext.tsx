@@ -9,7 +9,7 @@ import axios from "axios";
 
 // API Base URL - Production backend hosted on Render
 // This makes the frontend completely independent from any local backend setup
-const API_BASE_URL = "https://sharelystbackend.onrender.com";
+const API_BASE_URL = "https://sharelystbackend.onrender.com/api";
 
 // Token storage key
 const TOKEN_KEY = "auth_token";
@@ -57,30 +57,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const storedToken = await SecureStore.getItemAsync(TOKEN_KEY);
       
       if (storedToken) {
-        // Verify token with backend
-        const response = await axios.post(
-          `${API_BASE_URL}/auth/verify`,
-          {},
-          {
-            headers: {
-              Authorization: `Bearer ${storedToken}`,
-            },
-          }
-        );
+        // Optimistically set token to unblock UI
+        setToken(storedToken);
+        setIsLoading(false);
+        
+        // Verify token with backend in background
+        try {
+          const response = await axios.post(
+            `${API_BASE_URL}/auth/verify`,
+            {},
+            {
+              headers: {
+                Authorization: `Bearer ${storedToken}`,
+              },
+              timeout: 5000, // 5 second timeout
+            }
+          );
 
-        if (response.data.success) {
-          setToken(storedToken);
-          setUser(response.data.data);
-        } else {
-          // Token is invalid, remove it
-          await SecureStore.deleteItemAsync(TOKEN_KEY);
+          if (response.data.success) {
+            setUser(response.data.data);
+          } else {
+            // Token is invalid, clear auth state
+            setToken(null);
+            setUser(null);
+            await SecureStore.deleteItemAsync(TOKEN_KEY);
+          }
+        } catch (verifyError) {
+          console.error("Token verification failed:", verifyError);
+          // Keep user logged in but without user data
+          // The user data will be fetched on next successful API call
         }
+      } else {
+        setIsLoading(false);
       }
     } catch (error) {
       console.error("Error loading token:", error);
-      // If verification fails, remove the token
-      await SecureStore.deleteItemAsync(TOKEN_KEY);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -100,7 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         identifier,
         password,
       }, {
-        timeout: 10000, // 10 second timeout
+        timeout: 15000, // 15 second timeout for slower connections
         headers: {
           'Content-Type': 'application/json',
         },
@@ -157,7 +168,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         password,
         confirmPassword,
       }, {
-        timeout: 10000, // 10 second timeout
+        timeout: 15000, // 15 second timeout for slower connections
         headers: {
           'Content-Type': 'application/json',
         },
