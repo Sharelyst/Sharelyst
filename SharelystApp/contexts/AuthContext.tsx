@@ -139,8 +139,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         status: error.response?.status,
       });
       
-      const errorMessage =
-        error.response?.data?.message || error.message || "Login failed";
+      // Show generic error message to user for security
+      const errorMessage = "Invalid credentials";
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
