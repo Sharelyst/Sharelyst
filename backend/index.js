@@ -3,6 +3,9 @@ const express = require("express");
 const cors = require("cors");
 const sqlite3 = require("sqlite3").verbose(); // verbose for detailed error messages. Remove in production.
 
+// Import routes
+const authRoutes = require("./routes/auth");
+
 // Initialize Express app
 const app = express();
 app.use(cors());
@@ -18,11 +21,16 @@ const db = new sqlite3.Database("./database.db", (err) => {
     }
 });
 
+// Store database instance in app for use in routes
+app.set("db", db);
 
 // Define routes
 app.get("/", (req, res) => {
     res.send("Welcome to the Sharelyst backend!");
 });
+
+// Authentication routes
+app.use("/api/auth", authRoutes);
 
 // Start the server
 const PORT = process.env.PORT || 3000;
