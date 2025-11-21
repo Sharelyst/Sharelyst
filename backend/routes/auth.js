@@ -1,16 +1,17 @@
 /**
- * Authentication routes
- * Handles user registration and login with secure password hashing
+ * Authentication Routes
+ * Handles user registration, login, and token verification
  */
 
-const express = require("express");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
+const express = require('express');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const router = express.Router();
 
-// Secret key for JWT - In production, use environment variable
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
-const SALT_ROUNDS = 10;
+const config = require('../config');
+const { ApiError, asyncHandler } = require('../middleware/errorHandler');
+const { authenticateToken } = require('../middleware/auth');
+const { validateEmail, validatePassword } = require('../middleware/validation');
 
 /**
  * POST /api/auth/register
@@ -22,124 +23,97 @@ const SALT_ROUNDS = 10;
  * - password: string (required, min 6 characters)
  * - confirmPassword: string (required, must match password)
  */
-router.post("/register", async (req, res) => {
-    const { username, email, password, confirmPassword } = req.body;
+router.post('/register', asyncHandler(async (req, res) => {
+  const { username, email, password, confirmPassword } = req.body;
 
-    // Validate required fields
-    if (!username || !email || !password || !confirmPassword) {
-        return res.status(400).json({
-            success: false,
-            message: "All fields are required"
-        });
-    }
+  // Validate required fields
+  if (!username || !email || !password || !confirmPassword) {
+    throw new ApiError(400, 'All fields are required');
+  }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-        return res.status(400).json({
-            success: false,
-            message: "Invalid email format"
-        });
-    }
+  // Validate email format
+  if (!validateEmail(email)) {
+    throw new ApiError(400, 'Invalid email format');
+  }
 
-    // Validate password length
-    if (password.length < 6) {
-        return res.status(400).json({
-            success: false,
-            message: "Password must be at least 6 characters long"
-        });
-    }
+  // Validate password
+  const passwordValidation = validatePassword(password);
+  if (!passwordValidation.valid) {
+    throw new ApiError(400, passwordValidation.message);
+  }
 
-    // Validate password match
-    if (password !== confirmPassword) {
-        return res.status(400).json({
-            success: false,
-            message: "Passwords do not match"
-        });
-    }
+  // Validate password match
+  if (password !== confirmPassword) {
+    throw new ApiError(400, 'Passwords do not match');
+  }
 
-    try {
-        const db = req.app.get("db");
+  const db = req.app.get('db');
 
-        // Check if username already exists
-        const existingUsername = await new Promise((resolve, reject) => {
-            db.get(
-                "SELECT id FROM users WHERE username = ?",
-                [username],
-                (err, row) => {
-                    if (err) reject(err);
-                    else resolve(row);
-                }
-            );
-        });
+  // Check if username already exists
+  const existingUsername = await new Promise((resolve, reject) => {
+    db.get(
+      'SELECT id FROM users WHERE username = ?',
+      [username],
+      (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      }
+    );
+  });
 
-        if (existingUsername) {
-            return res.status(409).json({
-                success: false,
-                message: "Username already exists"
-            });
-        }
+  if (existingUsername) {
+    throw new ApiError(409, 'Username already exists');
+  }
 
-        // Check if email already exists
-        const existingEmail = await new Promise((resolve, reject) => {
-            db.get(
-                "SELECT id FROM users WHERE email = ?",
-                [email],
-                (err, row) => {
-                    if (err) reject(err);
-                    else resolve(row);
-                }
-            );
-        });
+  // Check if email already exists
+  const existingEmail = await new Promise((resolve, reject) => {
+    db.get(
+      'SELECT id FROM users WHERE email = ?',
+      [email],
+      (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      }
+    );
+  });
 
-        if (existingEmail) {
-            return res.status(409).json({
-                success: false,
-                message: "Email already exists"
-            });
-        }
+  if (existingEmail) {
+    throw new ApiError(409, 'Email already exists');
+  }
 
-        // Hash the password
-        const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+  // Hash the password
+  const passwordHash = await bcrypt.hash(password, config.security.bcryptSaltRounds);
 
-        // Insert new user into database
-        const result = await new Promise((resolve, reject) => {
-            db.run(
-                "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)",
-                [username, email, passwordHash],
-                function(err) {
-                    if (err) reject(err);
-                    else resolve({ id: this.lastID });
-                }
-            );
-        });
+  // Insert new user into database
+  const result = await new Promise((resolve, reject) => {
+    db.run(
+      'INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)',
+      [username, email, passwordHash],
+      function(err) {
+        if (err) reject(err);
+        else resolve({ id: this.lastID });
+      }
+    );
+  });
 
-        // Generate JWT token
-        const token = jwt.sign(
-            { id: result.id, username, email },
-            JWT_SECRET,
-            { expiresIn: "7d" }
-        );
+  // Generate JWT token
+  const token = jwt.sign(
+    { id: result.id, username, email },
+    config.jwt.secret,
+    { expiresIn: config.jwt.expiresIn }
+  );
 
-        res.status(201).json({
-            success: true,
-            message: "User registered successfully",
-            data: {
-                id: result.id,
-                username,
-                email,
-                token
-            }
-        });
-
-    } catch (error) {
-        console.error("Registration error:", error);
-        res.status(500).json({
-            success: false,
-            message: "Internal server error"
-        });
-    }
-});
+  res.status(201).json({
+    success: true,
+    message: 'User registered successfully',
+    data: {
+      id: result.id,
+      username,
+      email,
+      token,
+    },
+  });
+}));
 
 /**
  * POST /api/auth/login
@@ -149,76 +123,58 @@ router.post("/register", async (req, res) => {
  * - identifier: string (username OR email)
  * - password: string
  */
-router.post("/login", async (req, res) => {
-    const { identifier, password } = req.body;
+router.post('/login', asyncHandler(async (req, res) => {
+  const { identifier, password } = req.body;
 
-    // Validate required fields
-    if (!identifier || !password) {
-        return res.status(400).json({
-            success: false,
-            message: "Username/email and password are required"
-        });
-    }
+  // Validate required fields
+  if (!identifier || !password) {
+    throw new ApiError(400, 'Username/email and password are required');
+  }
 
-    try {
-        const db = req.app.get("db");
+  const db = req.app.get('db');
 
-        // Query user by username OR email
-        const user = await new Promise((resolve, reject) => {
-            db.get(
-                "SELECT * FROM users WHERE username = ? OR email = ?",
-                [identifier, identifier],
-                (err, row) => {
-                    if (err) reject(err);
-                    else resolve(row);
-                }
-            );
-        });
+  // Query user by username OR email
+  const user = await new Promise((resolve, reject) => {
+    db.get(
+      'SELECT * FROM users WHERE username = ? OR email = ?',
+      [identifier, identifier],
+      (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      }
+    );
+  });
 
-        // Check if user exists
-        if (!user) {
-            return res.status(401).json({
-                success: false,
-                message: "Invalid credentials"
-            });
-        }
+  // Check if user exists
+  if (!user) {
+    throw new ApiError(401, 'Invalid credentials');
+  }
 
-        // Verify password
-        const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+  // Verify password
+  const isPasswordValid = await bcrypt.compare(password, user.password_hash);
 
-        if (!isPasswordValid) {
-            return res.status(401).json({
-                success: false,
-                message: "Invalid credentials"
-            });
-        }
+  if (!isPasswordValid) {
+    throw new ApiError(401, 'Invalid credentials');
+  }
 
-        // Generate JWT token
-        const token = jwt.sign(
-            { id: user.id, username: user.username, email: user.email },
-            JWT_SECRET,
-            { expiresIn: "7d" }
-        );
+  // Generate JWT token
+  const token = jwt.sign(
+    { id: user.id, username: user.username, email: user.email },
+    config.jwt.secret,
+    { expiresIn: config.jwt.expiresIn }
+  );
 
-        res.status(200).json({
-            success: true,
-            message: "Login successful",
-            data: {
-                id: user.id,
-                username: user.username,
-                email: user.email,
-                token
-            }
-        });
-
-    } catch (error) {
-        console.error("Login error:", error);
-        res.status(500).json({
-            success: false,
-            message: "Internal server error"
-        });
-    }
-});
+  res.status(200).json({
+    success: true,
+    message: 'Login successful',
+    data: {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      token,
+    },
+  });
+}));
 
 /**
  * POST /api/auth/verify
@@ -227,37 +183,47 @@ router.post("/login", async (req, res) => {
  * Request headers:
  * - Authorization: Bearer <token>
  */
-router.post("/verify", async (req, res) => {
-    const authHeader = req.headers.authorization;
+router.post('/verify', authenticateToken, asyncHandler(async (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Token is valid',
+    data: {
+      id: req.user.id,
+      username: req.user.username,
+      email: req.user.email,
+    },
+  });
+}));
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return res.status(401).json({
-            success: false,
-            message: "No token provided"
-        });
-    }
+/**
+ * GET /api/auth/me
+ * Get current user profile
+ * 
+ * Request headers:
+ * - Authorization: Bearer <token>
+ */
+router.get('/me', authenticateToken, asyncHandler(async (req, res) => {
+  const db = req.app.get('db');
 
-    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+  const user = await new Promise((resolve, reject) => {
+    db.get(
+      'SELECT id, username, email, created_at FROM users WHERE id = ?',
+      [req.user.id],
+      (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      }
+    );
+  });
 
-    try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        
-        res.status(200).json({
-            success: true,
-            message: "Token is valid",
-            data: {
-                id: decoded.id,
-                username: decoded.username,
-                email: decoded.email
-            }
-        });
+  if (!user) {
+    throw new ApiError(404, 'User not found');
+  }
 
-    } catch (error) {
-        res.status(401).json({
-            success: false,
-            message: "Invalid or expired token"
-        });
-    }
-});
+  res.status(200).json({
+    success: true,
+    data: user,
+  });
+}));
 
 module.exports = router;
