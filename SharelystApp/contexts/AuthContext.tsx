@@ -6,23 +6,10 @@
 import React from "react";
 import * as SecureStore from "expo-secure-store";
 import axios from "axios";
-import { Platform } from "react-native";
 
-// API Base URL - Configured for different platforms
-// For Android Emulator: use 10.0.2.2
-// For iOS Simulator: use localhost
-// For Physical Device: use your computer's IP address (e.g., http://192.168.1.x:3000/api)
-const getApiBaseUrl = () => {
-  if (Platform.OS === "android") {
-    // Use this for Android Emulator
-    return "http://192.168.2.150:3000/api";
-  }
-  // For iOS Simulator/Physical Devices - use your machine's actual IP
-  // Change this to localhost if running on iOS Simulator and it doesn't work
-  return "http://192.168.2.19:3000/api";
-};
-
-const API_BASE_URL = getApiBaseUrl();
+// API Base URL - Production backend hosted on Render
+// This makes the frontend completely independent from any local backend setup
+const API_BASE_URL = "https://sharelystbackend.onrender.com";
 
 // Token storage key
 const TOKEN_KEY = "auth_token";

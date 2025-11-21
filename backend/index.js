@@ -25,13 +25,43 @@ app.use(cors(config.cors));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Request logging in development
-if (config.isDevelopment) {
-  app.use((req, res, next) => {
-    console.log(`${req.method} ${req.path}`);
-    next();
-  });
-}
+// Request logging middleware - logs all client requests
+app.use((req, res, next) => {
+  const timestamp = new Date().toISOString();
+  const clientIp = req.ip || req.connection.remoteAddress || 'Unknown';
+  const userAgent = req.get('user-agent') || 'Unknown';
+  
+  // Log the incoming request
+  console.log('\n' + '='.repeat(80));
+  console.log(`[${timestamp}] Incoming Request`);
+  console.log(`Client IP: ${clientIp}`);
+  console.log(`Method: ${req.method}`);
+  console.log(`Path: ${req.originalUrl || req.url}`);
+  console.log(`User-Agent: ${userAgent}`);
+  
+  // Log request body for POST/PUT/PATCH requests (excluding sensitive data)
+  if (['POST', 'PUT', 'PATCH'].includes(req.method) && Object.keys(req.body).length > 0) {
+    const sanitizedBody = { ...req.body };
+    // Hide sensitive fields
+    if (sanitizedBody.password) sanitizedBody.password = '[REDACTED]';
+    if (sanitizedBody.token) sanitizedBody.token = '[REDACTED]';
+    console.log(`Body:`, JSON.stringify(sanitizedBody, null, 2));
+  }
+  
+  // Capture response details
+  const startTime = Date.now();
+  const originalSend = res.send;
+  
+  res.send = function(data) {
+    const duration = Date.now() - startTime;
+    console.log(`Status: ${res.statusCode}`);
+    console.log(`Response Time: ${duration}ms`);
+    console.log('='.repeat(80) + '\n');
+    return originalSend.apply(res, arguments);
+  };
+  
+  next();
+});
 
 // Initialize database connection
 let db;
