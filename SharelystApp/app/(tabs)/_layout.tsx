@@ -1,4 +1,5 @@
 import { Tabs } from 'expo-router';
+import '../globals.css';
 import React from 'react';
 
 import { HapticTab } from '@/components/haptic-tab';
