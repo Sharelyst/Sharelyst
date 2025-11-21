@@ -8,6 +8,7 @@ import * as SecureStore from "expo-secure-store";
 import axios from "axios";
 import { Platform } from "react-native";
 
+
 // API Base URL - Configured for different platforms
 // For Android Emulator: use 10.0.2.2
 // For iOS Simulator: use localhost
@@ -15,11 +16,11 @@ import { Platform } from "react-native";
 const getApiBaseUrl = () => {
   if (Platform.OS === "android") {
     // Use this for Android Emulator
-    return "http://192.168.2.150:3000/api";
+    return `${process.env.EXPO_PUBLIC_ANDROID_API}:3000/api`;
   }
   // For iOS Simulator/Physical Devices - use your machine's actual IP
   // Change this to localhost if running on iOS Simulator and it doesn't work
-  return "http://192.168.2.19:3000/api";
+  return `${process.env.EXPO_PUBLIC_IPHONE_API}:3000/api`;
 };
 
 const API_BASE_URL = getApiBaseUrl();
