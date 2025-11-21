@@ -15,7 +15,7 @@ import { Platform } from "react-native";
 const getApiBaseUrl = () => {
   if (Platform.OS === "android") {
     // Use this for Android Emulator
-    return "http://10.0.2.2:3000/api";
+    return "http://192.168.2.150:3000/api";
   }
   // For iOS Simulator/Physical Devices - use your machine's actual IP
   // Change this to localhost if running on iOS Simulator and it doesn't work
