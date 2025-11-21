@@ -1,35 +1,85 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
-
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+// app/(tabs)/_layout.tsx
+import { Tabs } from "expo-router";
+import React from "react";
+import { View, TouchableOpacity, StyleSheet } from "react-native";
+// import { Home, Users, Activity, User, Plus } from "lucide-react-native";
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
+        tabBarStyle: {
+          height: 65,
+          paddingBottom: 8,
+          paddingTop: 8,
+        },
+      }}
+    >
       <Tabs.Screen
-        name="index"
+        name="home"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          // tabBarIcon: ({ color, size }) => <Home color={color} size={size} />,
+          tabBarLabel: "Home",
         }}
       />
+
       <Tabs.Screen
-        name="explore"
+        name="activities"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          // tabBarIcon: ({ color, size }) => <Activity color={color} size={size} />,
+          tabBarLabel: "Activities",
+        }}
+      />
+
+      {/* Custom Middle Add Button */}
+      <Tabs.Screen
+        name="add"
+        options={{
+          tabBarLabel: "",
+          tabBarIcon: () => (
+            <View style={styles.addButtonContainer}>
+              <TouchableOpacity style={styles.addButton}>
+                {/* <Plus size={28} color="#fff" /> */}
+              </TouchableOpacity>
+            </View>
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="people"
+        options={{
+          // tabBarIcon: ({ color, size }) => <Users color={color} size={size} />,
+          tabBarLabel: "Group",
+        }}
+      />
+
+      <Tabs.Screen
+        name="profile"
+        options={{
+          // tabBarIcon: ({ color, size }) => <User color={color} size={size} />,
+          tabBarLabel: "Profile",
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  addButtonContainer: {
+    position: "absolute",
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  addButton: {
+    width: 65,
+    height: 65,
+    borderRadius: 50,
+    backgroundColor: "#007AFF",
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 4,
+  },
+});
