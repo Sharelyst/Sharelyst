@@ -3,7 +3,7 @@
  * Allows users to log in with username/email and password
  */
 
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,

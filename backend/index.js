@@ -34,6 +34,11 @@ app.use("/api/auth", authRoutes);
 
 // Start the server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+const HOST = '0.0.0.0'; // Listen on all network interfaces
+
+app.listen(PORT, HOST, () => {
+    console.log(`Server is running on http://${HOST}:${PORT}`);
+    console.log(`Local access: http://localhost:${PORT}`);
+    console.log(`Network access: http://<your-ip>:${PORT}`);
+    console.log(`Android Emulator: http://10.0.2.2:${PORT}`);
 });

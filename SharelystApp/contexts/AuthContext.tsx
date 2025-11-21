@@ -6,9 +6,23 @@
 import React from "react";
 import * as SecureStore from "expo-secure-store";
 import axios from "axios";
+import { Platform } from "react-native";
 
-// API Base URL - Update this to match your backend
-const API_BASE_URL = "http://localhost:3000/api";
+// API Base URL - Configured for different platforms
+// For Android Emulator: use 10.0.2.2
+// For iOS Simulator: use localhost
+// For Physical Device: use your computer's IP address (e.g., http://192.168.1.x:3000/api)
+const getApiBaseUrl = () => {
+  if (Platform.OS === "android") {
+    // Use this for Android Emulator
+    return "http://10.0.2.2:3000/api";
+  }
+  // For iOS Simulator/Physical Devices - use your machine's actual IP
+  // Change this to localhost if running on iOS Simulator and it doesn't work
+  return "http://192.168.2.19:3000/api";
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 // Token storage key
 const TOKEN_KEY = "auth_token";
@@ -92,10 +106,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setError(null);
       setIsLoading(true);
 
+      console.log("Logging in user:", identifier);
+      console.log("API URL:", `${API_BASE_URL}/auth/login`);
+
       const response = await axios.post(`${API_BASE_URL}/auth/login`, {
         identifier,
         password,
+      }, {
+        timeout: 10000, // 10 second timeout
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
+
+      console.log("Login response:", response.data);
 
       if (response.data.success) {
         const { token: newToken, ...userData } = response.data.data;
@@ -109,6 +133,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error(response.data.message || "Login failed");
       }
     } catch (error: any) {
+      console.error("Login error details:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
+      
       const errorMessage =
         error.response?.data?.message || error.message || "Login failed";
       setError(errorMessage);
@@ -131,12 +161,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setError(null);
       setIsLoading(true);
 
+      console.log("Registering user with:", { username, email });
+      console.log("API URL:", `${API_BASE_URL}/auth/register`);
+
       const response = await axios.post(`${API_BASE_URL}/auth/register`, {
         username,
         email,
         password,
         confirmPassword,
+      }, {
+        timeout: 10000, // 10 second timeout
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
+
+      console.log("Registration response:", response.data);
 
       if (response.data.success) {
         const { token: newToken, ...userData } = response.data.data;
@@ -150,6 +190,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error(response.data.message || "Registration failed");
       }
     } catch (error: any) {
+      console.error("Registration error details:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
+      
       const errorMessage =
         error.response?.data?.message || error.message || "Registration failed";
       setError(errorMessage);
