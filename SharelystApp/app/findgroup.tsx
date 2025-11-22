@@ -19,9 +19,9 @@ const handleJoin = () =>{
     //   },
     //   {text: 'OK', onPress: () => console.log('OK Pressed')},
     // ])
-    router.push('./maingroup');
+    router.push('/maingroup');
   }
-export default function findgroup() {
+export default function FindGroup() {
     return(
     <SafeAreaView className="flex-1 bg-[#F2F2F2]" >
       <View className="flex-1 px-6 pt-4">
