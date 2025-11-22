@@ -2,7 +2,7 @@
 import { Tabs } from "expo-router";
 import React from "react";
 import { View, TouchableOpacity, StyleSheet } from "react-native";
-// import { Home, Users, Activity, User, Plus } from "lucide-react-native";
+import { Home, Users, Activity, User, Plus } from "lucide-react-native";
 
 export default function TabLayout() {
   return (
@@ -19,7 +19,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="home"
         options={{
-          // tabBarIcon: ({ color, size }) => <Home color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => <Home color={color} size={size} />,
           tabBarLabel: "Home",
         }}
       />
@@ -27,7 +27,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="activities"
         options={{
-          // tabBarIcon: ({ color, size }) => <Activity color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => <Activity color={color} size={size} />,
           tabBarLabel: "Activities",
         }}
       />
@@ -40,7 +40,7 @@ export default function TabLayout() {
           tabBarIcon: () => (
             <View style={styles.addButtonContainer}>
               <TouchableOpacity style={styles.addButton}>
-                {/* <Plus size={28} color="#fff" /> */}
+                <Plus size={28} color="#fff" />
               </TouchableOpacity>
             </View>
           ),
@@ -50,7 +50,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="people"
         options={{
-          // tabBarIcon: ({ color, size }) => <Users color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => <Users color={color} size={size} />,
           tabBarLabel: "Group",
         }}
       />
@@ -58,7 +58,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          // tabBarIcon: ({ color, size }) => <User color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => <User color={color} size={size} />,
           tabBarLabel: "Profile",
         }}
       />

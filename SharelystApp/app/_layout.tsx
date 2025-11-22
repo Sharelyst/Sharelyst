@@ -20,26 +20,18 @@ function RootLayoutNav() {
   const segments = useSegments();
   const router = useRouter();
 
-  React.useEffect(() => {
-    if (isLoading) {
-      // Still checking authentication status
-      return;
-    }
+React.useEffect(() => {
+  if (isLoading) return;
 
-    const inAuthGroup = segments[0] === '(tabs)';
+  if (!isAuthenticated) {
+    router.replace("/login");
+    return;
+  }
 
-    if (!isAuthenticated) {
-      // User is not authenticated, redirect to login
-      if (segments[0] !== 'login' && segments[0] !== 'register') {
-        router.replace('/login');
-      }
-    } else {
-      // User is authenticated, redirect away from auth screens
-      if (segments[0] === 'login' || segments[0] === 'register') {
-        router.replace('/(tabs)/home');
-      }
-    }
-  }, [isAuthenticated, segments, isLoading]);
+  // Authenticated → always go to home
+  router.replace("/(tabs)/home");
+}, [isAuthenticated, isLoading, router]);
+
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>

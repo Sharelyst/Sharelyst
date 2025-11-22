@@ -9,12 +9,12 @@ import {
   ScrollView,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
   const router = useRouter();
 
-  // Placeholder
-  const people = ["MZ", "AB", "JK", "RS", "TT"]; // > 4 will show ...
+  const people = ["MZ", "AB", "JK", "RS", "TT"];
 
   const recentActivities = [
     {
@@ -35,6 +35,7 @@ export default function HomeScreen() {
   const hasOverflow = people.length > 4;
 
   return (
+    <SafeAreaView style={styles.container}>
     <ScrollView style={styles.container}>
       {/* Top Total Bill Image Background */}
       <ImageBackground
@@ -107,11 +108,12 @@ export default function HomeScreen() {
         ))}
       </View>
     </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
+  container: { flex: 1, padding: 24 },
 
   billBackground: {
     height: 200,
