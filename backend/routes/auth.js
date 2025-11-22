@@ -19,16 +19,19 @@ const { validateEmail, validatePassword } = require('../middleware/validation');
  * 
  * Request body:
  * - username: string (required, unique)
+ * - firstName: string (required)
+ * - lastName: string (required)
  * - email: string (required, unique)
+ * - phone: string (optional)
  * - password: string (required, min 6 characters)
  * - confirmPassword: string (required, must match password)
  */
 router.post('/register', asyncHandler(async (req, res) => {
-  const { username, email, password, confirmPassword } = req.body;
+  const { username, firstName, lastName, email, phone, password, confirmPassword } = req.body;
 
   // Validate required fields
-  if (!username || !email || !password || !confirmPassword) {
-    throw new ApiError(400, 'All fields are required');
+  if (!username || !firstName || !lastName || !email || !password || !confirmPassword) {
+    throw new ApiError(400, 'Username, first name, last name, email, password, and confirm password are required');
   }
 
   // Validate email format
@@ -87,8 +90,8 @@ router.post('/register', asyncHandler(async (req, res) => {
   // Insert new user into database
   const result = await new Promise((resolve, reject) => {
     db.run(
-      'INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)',
-      [username, email, passwordHash],
+      'INSERT INTO users (username, first_name, last_name, email, phone, password_hash) VALUES (?, ?, ?, ?, ?, ?)',
+      [username, firstName, lastName, email, phone || null, passwordHash],
       function(err) {
         if (err) reject(err);
         else resolve({ id: this.lastID });
@@ -109,7 +112,10 @@ router.post('/register', asyncHandler(async (req, res) => {
     data: {
       id: result.id,
       username,
+      firstName,
+      lastName,
       email,
+      phone,
       token,
     },
   });
@@ -170,7 +176,10 @@ router.post('/login', asyncHandler(async (req, res) => {
     data: {
       id: user.id,
       username: user.username,
+      firstName: user.first_name,
+      lastName: user.last_name,
       email: user.email,
+      phone: user.phone,
       token,
     },
   });
@@ -207,7 +216,7 @@ router.get('/me', authenticateToken, asyncHandler(async (req, res) => {
 
   const user = await new Promise((resolve, reject) => {
     db.get(
-      'SELECT id, username, email, created_at FROM users WHERE id = ?',
+      'SELECT id, username, first_name, last_name, email, phone, created_at FROM users WHERE id = ?',
       [req.user.id],
       (err, row) => {
         if (err) reject(err);
