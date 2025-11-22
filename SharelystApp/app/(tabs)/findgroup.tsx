@@ -1,7 +1,7 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Pressable, Text, View, Image, Alert } from "react-native";
 import { router } from 'expo-router';
-import { CodeInput} from './CodeInput'
+import CodeInput from './CodeInput'
 
 
 
@@ -19,7 +19,7 @@ const handleJoin = () =>{
     //   },
     //   {text: 'OK', onPress: () => console.log('OK Pressed')},
     // ])
-    router.push('/(tabs)/maingroup');
+    router.push('./maingroup');
   }
 export default function findgroup() {
     return(

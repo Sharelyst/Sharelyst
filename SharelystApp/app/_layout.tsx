@@ -32,12 +32,12 @@ function RootLayoutNav() {
     if (!isAuthenticated) {
       // User is not authenticated, redirect to login
       if (segments[0] !== 'login' && segments[0] !== 'register') {
-        router.replace('/login');
+        router.replace('./login');
       }
     } else {
       // User is authenticated, redirect away from auth screens
       if (segments[0] === 'login' || segments[0] === 'register') {
-        router.replace('/(tabs)');
+        router.replace('./(tabs)/findgroup');
       }
     }
   }, [isAuthenticated, segments, isLoading]);

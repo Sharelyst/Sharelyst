@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
 import { View, Text, TextInput, Pressable } from "react-native";
 
-export function CodeInput() {
+export default function CodeInput() {
   const [code, setCode] = useState("");
   const inputRef = useRef<TextInput | null>(null);
 
