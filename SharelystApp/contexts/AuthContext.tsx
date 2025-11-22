@@ -16,11 +16,11 @@ import { Platform } from "react-native";
 const getApiBaseUrl = () => {
   if (Platform.OS === "android") {
     // Use this for Android Emulator
-    return `${process.env.EXPO_PUBLIC_ANDROID_API}:3000/api`;
+    return `${process.env.EXPO_PUBLIC_ANDROID_API}`;
   }
   // For iOS Simulator/Physical Devices - use your machine's actual IP
   // Change this to localhost if running on iOS Simulator and it doesn't work
-  return `${process.env.EXPO_PUBLIC_IPHONE_API}:3000/api`;
+  return `${process.env.EXPO_PUBLIC_IPHONE_API}`;
 };
 
 const API_BASE_URL = getApiBaseUrl();
