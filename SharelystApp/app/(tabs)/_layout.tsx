@@ -1,10 +1,12 @@
 import { Tabs } from 'expo-router';
+import '../globals.css';
 import React from 'react';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Image } from 'react-native';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -17,19 +19,32 @@ export default function TabLayout() {
         tabBarButton: HapticTab,
       }}>
       <Tabs.Screen
-        name="index"
+        name="maingroup"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          tabBarIcon: ({ color }) => <Image     source={require("@/assets/images/homeIcon.png")}/>,
         }}
       />
-      <Tabs.Screen
-        name="explore"
+           <Tabs.Screen
+        name="activities"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'activities',
+          tabBarIcon: ({ color }) => <Image     source={require("@/assets/images/bookIcon.png")}/>,
         }}
       />
+           <Tabs.Screen
+        name="people"
+        options={{
+          title: 'people',
+          tabBarIcon: ({ color }) => <Image     source={require("@/assets/images/peopleIcon.png")}/>,
+        }}
+      />
+           <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'profile',
+          tabBarIcon: ({ color }) => <Image     source={require("@/assets/images/profileIcon.png")}/>,
+        }}/>
     </Tabs>
   );
 }

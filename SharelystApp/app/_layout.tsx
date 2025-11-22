@@ -1,4 +1,5 @@
 import React from 'react';
+import './globals.css';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -36,7 +37,7 @@ function RootLayoutNav() {
     } else {
       // User is authenticated, redirect away from auth screens
       if (segments[0] === 'login' || segments[0] === 'register') {
-        router.replace('/(tabs)');
+         router.replace('/findgroup');
       }
     }
   }, [isAuthenticated, segments, isLoading]);
