@@ -1,6 +1,6 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Pressable, Text, View, Alert, ActivityIndicator } from "react-native";
-import { router } from 'expo-router';
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import CodeInput from './CodeInput';
 import { useAuth } from '../contexts/AuthContext';
@@ -11,6 +11,7 @@ export default function FindGroup() {
   const [groupCode, setGroupCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { token } = useAuth();
+  const router = useRouter();
 
   const handleJoin = async () => {
     if (groupCode.length !== 6) {
@@ -40,7 +41,7 @@ export default function FindGroup() {
           [
             {
               text: 'OK',
-              onPress: () => router.replace('/maingroup'),
+              onPress: () => router.replace('/(tabs)/maingroup'),
             },
           ]
         );

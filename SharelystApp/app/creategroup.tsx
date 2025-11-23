@@ -1,6 +1,6 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Pressable, Text, View, TextInput, ActivityIndicator, Alert } from "react-native";
-import { router } from 'expo-router';
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
@@ -12,6 +12,7 @@ export default function CreateGroup() {
   const [isLoading, setIsLoading] = useState(false);
   const [generatedCode, setGeneratedCode] = useState<number | null>(null);
   const { token } = useAuth();
+  const router = useRouter();
 
   const handleCreateGroup = async () => {
     if (!groupName.trim()) {
@@ -37,6 +38,7 @@ export default function CreateGroup() {
 
       if (response.data.success) {
         setGeneratedCode(response.data.data.groupCode);
+        setIsLoading(false);
       }
     } catch (error: any) {
       console.error('Error creating group:', error);
@@ -47,8 +49,20 @@ export default function CreateGroup() {
   };
 
   const handleContinue = () => {
-    // Use push instead of replace to ensure navigation context is available
-    router.push('/(tabs)/maingroup');
+    // Small delay to ensure navigation is ready
+    setTimeout(() => {
+      try {
+        router.replace('/(tabs)/maingroup');
+      } catch (error) {
+        console.error('Navigation error:', error);
+        // Fallback: try push instead
+        try {
+          router.push('/(tabs)/maingroup');
+        } catch (pushError) {
+          console.error('Push navigation also failed:', pushError);
+        }
+      }
+    }, 100);
   };
 
   if (generatedCode) {

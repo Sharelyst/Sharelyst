@@ -1,6 +1,6 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Pressable, Text, View, ActivityIndicator } from "react-native";
-import { router } from 'expo-router';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
@@ -9,6 +9,7 @@ import { API_URL } from '../config/api';
 export default function GroupChoice() {
   const [isCheckingGroup, setIsCheckingGroup] = useState(true);
   const { token } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     checkExistingGroup();
