@@ -127,8 +127,8 @@ export default function People() {
             })
           }
         >
-          <View className="w-12 h-12 bg-blue-500 rounded-full justify-center items-center mr-4">
-            <Text className="text-white text-base font-bold">
+          <View className="w-12 h-12 rounded-full border-[3px] border-black items-center justify-center mr-4">
+            <Text className="text-black text-base font-extrabold">
               {getInitials(member.first_name, member.last_name)}
             </Text>
           </View>

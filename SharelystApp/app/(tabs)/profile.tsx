@@ -193,8 +193,8 @@ export default function ProfileScreen() {
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
           <View className="items-center px-6 pt-8">
             {/* Profile Avatar */}
-            <View className="w-24 h-24 rounded-full bg-blue-500 items-center justify-center mb-4">
-              <Text className="text-white text-4xl font-bold">
+            <View className="w-24 h-24 rounded-full border-[3px] border-black items-center justify-center mb-4">
+              <Text className="text-black text-4xl font-extrabold">
                 {userProfile ? getInitials(userProfile.first_name, userProfile.last_name) : 'NA'}
               </Text>
             </View>
