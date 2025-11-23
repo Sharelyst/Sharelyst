@@ -37,8 +37,10 @@ export default function AddActivity() {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    fetchGroupMembers();
-  }, []);
+    if (token) {
+      fetchGroupMembers();
+    }
+  }, [token]);
 
   useEffect(() => {
     // When split or total changes, recalculate amounts
@@ -48,6 +50,12 @@ export default function AddActivity() {
   }, [split, total]);
 
   const fetchGroupMembers = async () => {
+    if (!token) {
+      console.log("No token available, skipping fetch");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
       const response = await axios.get(`${API_URL}/groups/my-group`, {

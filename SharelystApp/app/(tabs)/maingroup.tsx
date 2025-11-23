@@ -61,11 +61,19 @@ export default function Home() {
 
   useFocusEffect(
     React.useCallback(() => {
-      fetchGroupData();
-    }, [])
+      if (token) {
+        fetchGroupData();
+      }
+    }, [token])
   );
 
   const fetchGroupData = async () => {
+    if (!token) {
+      console.log("No token available, skipping fetch");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
       const [groupResponse, totalResponse, activitiesResponse] = await Promise.all([

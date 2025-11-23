@@ -43,10 +43,18 @@ export default function PersonDetails() {
   const personInitials = params.initials as string;
 
   useEffect(() => {
-    fetchPersonTransactions();
-  }, []);
+    if (token) {
+      fetchPersonTransactions();
+    }
+  }, [token]);
 
   const fetchPersonTransactions = async () => {
+    if (!token) {
+      console.log("No token available, skipping fetch");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
       const response = await axios.get(`${API_URL}/transactions/my-group`, {

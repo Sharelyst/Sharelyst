@@ -37,11 +37,19 @@ export default function People() {
 
   useFocusEffect(
     React.useCallback(() => {
-      fetchGroupMembers();
-    }, [])
+      if (token) {
+        fetchGroupMembers();
+      }
+    }, [token])
   );
 
   const fetchGroupMembers = async () => {
+    if (!token) {
+      console.log("No token available, skipping fetch");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
       const [groupResponse, transactionsResponse] = await Promise.all([

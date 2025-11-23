@@ -33,11 +33,19 @@ export default function ActivitiesScreen() {
 
   useFocusEffect(
     React.useCallback(() => {
-      fetchActivities();
-    }, [])
+      if (token) {
+        fetchActivities();
+      }
+    }, [token])
   );
 
   const fetchActivities = async () => {
+    if (!token) {
+      console.log("No token available, skipping fetch");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
       const response = await axios.get(`${API_URL}/transactions/my-group`, {
