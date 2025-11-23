@@ -2,11 +2,13 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useAuth } from "@/contexts/AuthContext";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ProfileScreen() {
   const { logout } = useAuth();
 
   return (
+    <SafeAreaView style={{ flex: 1 }}>
     <View style={styles.container}>
       <View style={styles.pfpLarge}>
         <Text style={styles.pfpLargeText}>MZ</Text>
@@ -19,6 +21,7 @@ export default function ProfileScreen() {
         <Text style={styles.logoutBtnText}>Log Out</Text>
       </TouchableOpacity>
     </View>
+    </SafeAreaView>
   );
 }
 

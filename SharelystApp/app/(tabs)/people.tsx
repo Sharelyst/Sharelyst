@@ -1,11 +1,13 @@
 // app/(tabs)/people.tsx
 import React from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function PeopleScreen() {
   const people = ["MZ", "AB", "JK", "RS", "TT", "LW", "MD"];
 
   return (
+    <SafeAreaView style={{ flex: 1 }}>
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Group Members</Text>
 
@@ -18,6 +20,7 @@ export default function PeopleScreen() {
         </View>
       ))}
     </ScrollView>
+    </SafeAreaView>
   );
 }
 
