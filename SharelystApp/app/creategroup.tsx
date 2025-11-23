@@ -1,7 +1,7 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Pressable, Text, View, TextInput, ActivityIndicator, Alert } from "react-native";
-import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { useRouter, useNavigation } from 'expo-router';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import { API_URL } from '../config/api';
@@ -11,8 +11,22 @@ export default function CreateGroup() {
   const [description, setDescription] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [generatedCode, setGeneratedCode] = useState<number | null>(null);
+  const [isReady, setIsReady] = useState(false);
   const { token } = useAuth();
   const router = useRouter();
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    // Ensure navigation is ready before rendering
+    const unsubscribe = navigation.addListener('focus', () => {
+      setIsReady(true);
+    });
+
+    // Set ready immediately if already focused
+    setIsReady(true);
+
+    return unsubscribe;
+  }, [navigation]);
 
   const handleCreateGroup = async () => {
     if (!groupName.trim()) {
@@ -48,22 +62,23 @@ export default function CreateGroup() {
     }
   };
 
-  const handleContinue = () => {
-    // Small delay to ensure navigation is ready
-    setTimeout(() => {
-      try {
-        router.replace('/(tabs)/maingroup');
-      } catch (error) {
-        console.error('Navigation error:', error);
-        // Fallback: try push instead
-        try {
-          router.push('/(tabs)/maingroup');
-        } catch (pushError) {
-          console.error('Push navigation also failed:', pushError);
-        }
-      }
-    }, 100);
-  };
+  const handleContinue = useCallback(() => {
+    try {
+      // Use push instead of replace to ensure proper navigation stack
+      router.push('/(tabs)/maingroup');
+    } catch (error) {
+      console.error('Navigation error:', error);
+      Alert.alert('Error', 'Failed to navigate. Please try again.');
+    }
+  }, [router]);
+
+  if (!isReady) {
+    return (
+      <SafeAreaView className="flex-1 bg-[#F2F2F2] items-center justify-center">
+        <ActivityIndicator size="large" color="#8B5CF6" />
+      </SafeAreaView>
+    );
+  }
 
   if (generatedCode) {
     return (
@@ -173,7 +188,13 @@ export default function CreateGroup() {
 
         {/* Back Button */}
         <Pressable
-          onPress={() => router.replace('/groupchoice')}
+          onPress={() => {
+            try {
+              router.replace('/groupchoice');
+            } catch (error) {
+              console.error('Navigation error:', error);
+            }
+          }}
           disabled={isLoading}
           className="w-full rounded-full bg-white border-2 border-gray-300 py-5 items-center justify-center mt-4"
         >

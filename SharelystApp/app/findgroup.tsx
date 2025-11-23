@@ -41,7 +41,7 @@ export default function FindGroup() {
           [
             {
               text: 'OK',
-              onPress: () => router.replace('/(tabs)/maingroup'),
+              onPress: () => router.push('/(tabs)/maingroup'),
             },
           ]
         );
