@@ -295,4 +295,176 @@ router.get('/total', authenticateToken, asyncHandler(async (req, res) => {
   });
 }));
 
+
+router.get('/splitBills', authenticateToken, asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  const db = req.app.get('db');
+
+  // fetch group user is in
+
+    const userWithGroup = await new Promise((resolve, reject) => {
+    db.get(
+      'SELECT group_id FROM users WHERE id = ?',
+      [userId],
+      (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      }
+    );
+  });
+
+   //If the user is not enrolled in a group, then return total as 0
+   // Pass the message along as well
+    if (!userWithGroup || !userWithGroup.group_id) {
+    return res.status(200).json({
+      success: true,
+      message: 'User is not in any group',
+      data: { total: 0 },
+    });
+  }
+
+    //Get theh group's id given a group number
+    const group = await new Promise((resolve, reject) => {
+    db.get(
+      'SELECT id FROM groups WHERE group_number = ?',
+      [userWithGroup.group_id],
+      (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      }
+    );
+  });
+    //Get the total sum for each transaction in the group
+    const result = await new Promise((resolve, reject) => {
+    db.get(
+        'SELECT SUM(total) as total FROM transactions WHERE group_id = ?',
+        [group.id],
+        (err, row) => {
+          if (err) reject(err);
+          else resolve(row);
+        }
+      );
+    });
+    
+    //Get the number of people in the group
+    const count = await new Promise((resolve, reject) => {
+    db.get('SELECT COUNT(*) as count FROM users WHERE group_id = ?',
+        [group.id],
+        (err, row) => {
+          if (err) reject(err);
+          else resolve(row);
+        }
+      );
+    });
+
+    // Get the amount paid by each user in the group
+    const amountsbyId = await new Promise((resolve, reject) => {
+      db.all('SELECT users.id, users.first_name, users.last_name, SUM(amount) , from payments JOIN users ON payments.user_id = users.id WHERE payments.group_id = ? GROUP BY users.id',[group.id]
+        ,      (err, rows) => {
+          if (err) reject(err);
+          else resolve(rows);
+        }
+      )
+
+    });   
+
+    
+    if(count.count === 0){throw new ApiError(400, 'No users in the group to split the bills');}
+    
+    const eachAmount = (result.total / people.count).toFixed(2);
+    
+    const owesMoney = [];
+    const isOwedMoney = [];
+    totalAmountToBeReceived, totalAmountToBePaid= 0;
+
+    //compute who goes where 
+    for(let i in amountsbyId){
+      //if person's total amount paid is less than each Amount, they owe money
+      if(i.amount > eachAmount){
+        amountToBeReceived = (i.amount - eachAmount).toFixed(2);
+        owesMoney.push(i.first_name, i.last_name, amountToBeReceived);
+        totalAmountToBeReceived += amountToBeReceived
+      }
+      else{
+        amountOwed = (eachAmount - i.amount).toFixed(2);
+        isOwedMoney.push(i.first_name, i.last_name, amountOwed);
+         totalAmountToBePaid += amountOwed}
+    }
+
+    //Final check to ensure amounts balance
+    if(Math.abs(totalAmountToBePaid - totalAmountToBeReceived) > 0.01){
+      throw new ApiError(500, 'Internal calculation error: amounts do not balance');
+    }
+
+
+    //Get rid of the people who owe nothing
+    const finalTransactions = [];
+    for(let i in isOwedMoney){
+      const msg = `${i.first_name} ${i.last_name} owes $0`;
+      finalTransactions.push(msg);
+    }
+
+
+
+    //Go over all the people who are owed money and match them with people who owe money
+    for(let i in isOwedMoney){
+
+      for(let j in owesMoney){
+        if(i.amount > 0){
+          if(j.amount > 0 && i.amount >= j.amount){
+            i.ampount -= j.amount; 
+            const receiver = i.first_name + ' ' + i.last_name;
+            const sender = j.first_name + ' ' + j.last_name;
+            const message = `${sender} owes ${receiver} $${j.amount}`;
+            finalTransactions.push(message);
+            j.amount = 0;            
+          }else{
+            const receiver = i.first_name + ' ' + i.last_name;
+            const sender = j.first_name + ' ' + j.last_name;
+            const message = `${sender} owes ${receiver} $${i.amount}`;
+            i.amount = 0;
+            j.amount -= i.amount;
+            finalTransactions.push(message);
+          }
+        }
+    } 
+
+
+      // Send out the final response
+      res.status(200).json({
+      success: true,
+      message: 'Transactions to settle bills calculated successfully',
+      data: {
+
+        total : result.total,
+        amountsPaid : amountsbyId,
+        transactions: finalTransactions
+      },
+    });
+
+    }
+
+
+
+
+
+
+
+
+    
+
+
+    
+
+
+
+
+
+
+
+
+
+
+  
+}));
 module.exports = router;
