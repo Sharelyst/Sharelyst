@@ -296,13 +296,19 @@ router.get('/total', authenticateToken, asyncHandler(async (req, res) => {
 }));
 
 
+/**
+ * GET /api/transactions/splitBills
+ * Calculate how bills should be split among group members
+ * 
+ * Request headers:
+ * - Authorization: Bearer <token>
+ */
 router.get('/splitBills', authenticateToken, asyncHandler(async (req, res) => {
   const userId = req.user.id;
   const db = req.app.get('db');
 
-  // fetch group user is in
-
-    const userWithGroup = await new Promise((resolve, reject) => {
+  // Get user's group
+  const userWithGroup = await new Promise((resolve, reject) => {
     db.get(
       'SELECT group_id FROM users WHERE id = ?',
       [userId],
@@ -313,20 +319,24 @@ router.get('/splitBills', authenticateToken, asyncHandler(async (req, res) => {
     );
   });
 
-   //If the user is not enrolled in a group, then return total as 0
-   // Pass the message along as well
-    if (!userWithGroup || !userWithGroup.group_id) {
+  // If the user is not enrolled in a group, return empty data
+  if (!userWithGroup || !userWithGroup.group_id) {
     return res.status(200).json({
       success: true,
       message: 'User is not in any group',
-      data: { total: 0 },
+      data: {
+        total: 0,
+        perPersonAmount: 0,
+        usersSummary: [],
+        transactions: []
+      },
     });
   }
 
-    //Get theh group's id given a group number
-    const group = await new Promise((resolve, reject) => {
+  // Get the group's id given a group number
+  const group = await new Promise((resolve, reject) => {
     db.get(
-      'SELECT id FROM groups WHERE group_number = ?',
+      'SELECT id, group_number FROM groups WHERE group_number = ?',
       [userWithGroup.group_id],
       (err, row) => {
         if (err) reject(err);
@@ -334,137 +344,266 @@ router.get('/splitBills', authenticateToken, asyncHandler(async (req, res) => {
       }
     );
   });
-    //Get the total sum for each transaction in the group
-    const result = await new Promise((resolve, reject) => {
+
+  if (!group) {
+    throw new ApiError(404, 'Group not found');
+  }
+
+  // Get the total sum for all transactions in the group
+  const result = await new Promise((resolve, reject) => {
     db.get(
-        'SELECT SUM(total) as total FROM transactions WHERE group_id = ?',
-        [group.id],
-        (err, row) => {
-          if (err) reject(err);
-          else resolve(row);
-        }
-      );
-    });
-    
-    //Get the number of people in the group
-    const count = await new Promise((resolve, reject) => {
-    db.get('SELECT COUNT(*) as count FROM users WHERE group_id = ?',
-        [group.id],
-        (err, row) => {
-          if (err) reject(err);
-          else resolve(row);
-        }
-      );
-    });
-
-    // Get the amount paid by each user in the group
-    const amountsbyId = await new Promise((resolve, reject) => {
-      db.all('SELECT users.id, users.first_name, users.last_name, SUM(amount) , from payments JOIN users ON payments.user_id = users.id WHERE payments.group_id = ? GROUP BY users.id',[group.id]
-        ,      (err, rows) => {
-          if (err) reject(err);
-          else resolve(rows);
-        }
-      )
-
-    });   
-
-    
-    if(count.count === 0){throw new ApiError(400, 'No users in the group to split the bills');}
-    
-    const eachAmount = (result.total / people.count).toFixed(2);
-    
-    const owesMoney = [];
-    const isOwedMoney = [];
-    totalAmountToBeReceived, totalAmountToBePaid= 0;
-
-    //compute who goes where 
-    for(let i in amountsbyId){
-      //if person's total amount paid is less than each Amount, they owe money
-      if(i.amount > eachAmount){
-        amountToBeReceived = (i.amount - eachAmount).toFixed(2);
-        owesMoney.push(i.first_name, i.last_name, amountToBeReceived);
-        totalAmountToBeReceived += amountToBeReceived
+      'SELECT COALESCE(SUM(total), 0) as total FROM transactions WHERE group_id = ?',
+      [group.id],
+      (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
       }
-      else{
-        amountOwed = (eachAmount - i.amount).toFixed(2);
-        isOwedMoney.push(i.first_name, i.last_name, amountOwed);
-         totalAmountToBePaid += amountOwed}
-    }
+    );
+  });
 
-    //Final check to ensure amounts balance
-    if(Math.abs(totalAmountToBePaid - totalAmountToBeReceived) > 0.01){
-      throw new ApiError(500, 'Internal calculation error: amounts do not balance');
-    }
+  // Get the number of people in the group
+  const count = await new Promise((resolve, reject) => {
+    db.get(
+      'SELECT COUNT(*) as count FROM users WHERE group_id = ?',
+      [userWithGroup.group_id],
+      (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      }
+    );
+  });
 
+  if (count.count === 0) {
+    throw new ApiError(400, 'No users in the group to split the bills');
+  }
 
-    //Get rid of the people who owe nothing
-    const finalTransactions = [];
-    for(let i in isOwedMoney){
-      const msg = `${i.first_name} ${i.last_name} owes $0`;
-      finalTransactions.push(msg);
-    }
+  // Get the amount paid by each user in the group
+  const amountsById = await new Promise((resolve, reject) => {
+    db.all(
+      `SELECT users.id, users.first_name, users.last_name, COALESCE(SUM(payments.amount), 0) as amount
+       FROM users
+       LEFT JOIN payments ON payments.user_id = users.id AND payments.group_id = ?
+       WHERE users.group_id = ?
+       GROUP BY users.id`,
+      [group.id, userWithGroup.group_id],
+      (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows);
+      }
+    );
+  });
 
+  const total = result.total || 0;
+  const eachAmount = parseFloat((total / count.count).toFixed(2));
 
+  // Calculate who owes money and who should receive money
+  const owesMoneyList = [];
+  const isOwedMoneyList = [];
+  const usersSummary = [];
 
-    //Go over all the people who are owed money and match them with people who owe money
-    for(let i in isOwedMoney){
+  for (const user of amountsById) {
+    const amountPaid = parseFloat(user.amount);
+    const difference = amountPaid - eachAmount;
 
-      for(let j in owesMoney){
-        if(i.amount > 0){
-          if(j.amount > 0 && i.amount >= j.amount){
-            i.ampount -= j.amount; 
-            const receiver = i.first_name + ' ' + i.last_name;
-            const sender = j.first_name + ' ' + j.last_name;
-            const message = `${sender} owes ${receiver} $${j.amount}`;
-            finalTransactions.push(message);
-            j.amount = 0;            
-          }else{
-            const receiver = i.first_name + ' ' + i.last_name;
-            const sender = j.first_name + ' ' + j.last_name;
-            const message = `${sender} owes ${receiver} $${i.amount}`;
-            i.amount = 0;
-            j.amount -= i.amount;
-            finalTransactions.push(message);
-          }
-        }
-    } 
-
-
-      // Send out the final response
-      res.status(200).json({
-      success: true,
-      message: 'Transactions to settle bills calculated successfully',
-      data: {
-
-        total : result.total,
-        amountsPaid : amountsbyId,
-        transactions: finalTransactions
-      },
+    usersSummary.push({
+      id: user.id,
+      name: `${user.first_name} ${user.last_name}`,
+      amountPaid: amountPaid.toFixed(2),
+      shouldPay: eachAmount.toFixed(2),
+      difference: difference.toFixed(2),
     });
 
+    if (difference > 0.01) {
+      // User paid more than their share, should receive money
+      isOwedMoneyList.push({
+        id: user.id,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        amount: parseFloat(difference.toFixed(2)),
+      });
+    } else if (difference < -0.01) {
+      // User paid less than their share, owes money
+      owesMoneyList.push({
+        id: user.id,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        amount: parseFloat(Math.abs(difference).toFixed(2)),
+      });
     }
+  }
 
-
-
-
-
-
-
-
-    
-
-
-    
-
-
-
-
-
-
-
-
-
-
+  // Generate settlement transactions using greedy algorithm
+  const finalTransactions = [];
   
+  // Create copies to manipulate
+  const debtors = [...owesMoneyList];
+  const creditors = [...isOwedMoneyList];
+
+  for (const debtor of debtors) {
+    let remainingDebt = debtor.amount;
+
+    for (const creditor of creditors) {
+      if (remainingDebt <= 0.01) break;
+      if (creditor.amount <= 0.01) continue;
+
+      const paymentAmount = Math.min(remainingDebt, creditor.amount);
+      
+      finalTransactions.push({
+        from: `${debtor.firstName} ${debtor.lastName}`,
+        to: `${creditor.firstName} ${creditor.lastName}`,
+        amount: parseFloat(paymentAmount.toFixed(2)),
+      });
+
+      remainingDebt -= paymentAmount;
+      creditor.amount -= paymentAmount;
+    }
+  }
+
+  res.status(200).json({
+    success: true,
+    message: 'Bill split calculated successfully',
+    data: {
+      total: parseFloat(total.toFixed(2)),
+      perPersonAmount: eachAmount,
+      usersSummary,
+      transactions: finalTransactions,
+    },
+  });
+}));
+
+/**
+ * POST /api/transactions/settleBills
+ * Settle all bills and optionally reset transactions or delete group
+ * 
+ * Request body:
+ * - action: 'reset' | 'delete' (required)
+ * 
+ * Request headers:
+ * - Authorization: Bearer <token>
+ */
+router.post('/settleBills', authenticateToken, asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  const { action } = req.body;
+  const db = req.app.get('db');
+
+  if (!action || !['reset', 'delete'].includes(action)) {
+    throw new ApiError(400, 'Action must be either "reset" or "delete"');
+  }
+
+  // Get user's group
+  const userWithGroup = await new Promise((resolve, reject) => {
+    db.get(
+      'SELECT group_id FROM users WHERE id = ?',
+      [userId],
+      (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      }
+    );
+  });
+
+  if (!userWithGroup || !userWithGroup.group_id) {
+    throw new ApiError(400, 'You must be in a group to settle bills');
+  }
+
+  // Get the group's id
+  const group = await new Promise((resolve, reject) => {
+    db.get(
+      'SELECT id, group_number FROM groups WHERE group_number = ?',
+      [userWithGroup.group_id],
+      (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      }
+    );
+  });
+
+  if (!group) {
+    throw new ApiError(404, 'Group not found');
+  }
+
+  if (action === 'reset') {
+    // Delete all transactions and payments for the group
+    await new Promise((resolve, reject) => {
+      db.run(
+        'DELETE FROM payments WHERE group_id = ?',
+        [group.id],
+        (err) => {
+          if (err) reject(err);
+          else resolve();
+        }
+      );
+    });
+
+    await new Promise((resolve, reject) => {
+      db.run(
+        'DELETE FROM transactions WHERE group_id = ?',
+        [group.id],
+        (err) => {
+          if (err) reject(err);
+          else resolve();
+        }
+      );
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'All bills have been settled and transactions reset',
+      data: { action: 'reset' },
+    });
+  } else if (action === 'delete') {
+    // Delete all transactions, payments, and the group itself
+    await new Promise((resolve, reject) => {
+      db.run(
+        'DELETE FROM payments WHERE group_id = ?',
+        [group.id],
+        (err) => {
+          if (err) reject(err);
+          else resolve();
+        }
+      );
+    });
+
+    await new Promise((resolve, reject) => {
+      db.run(
+        'DELETE FROM transactions WHERE group_id = ?',
+        [group.id],
+        (err) => {
+          if (err) reject(err);
+          else resolve();
+        }
+      );
+    });
+
+    // Remove group_id from all users in the group
+    await new Promise((resolve, reject) => {
+      db.run(
+        'UPDATE users SET group_id = NULL WHERE group_id = ?',
+        [userWithGroup.group_id],
+        (err) => {
+          if (err) reject(err);
+          else resolve();
+        }
+      );
+    });
+
+    // Delete the group
+    await new Promise((resolve, reject) => {
+      db.run(
+        'DELETE FROM groups WHERE id = ?',
+        [group.id],
+        (err) => {
+          if (err) reject(err);
+          else resolve();
+        }
+      );
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'All bills have been settled and group has been deleted',
+      data: { action: 'delete' },
+    });
+  }
 }));
 module.exports = router;
