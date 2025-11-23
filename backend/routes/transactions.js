@@ -312,6 +312,86 @@ router.get('/total', authenticateToken, asyncHandler(async (req, res) => {
 }));
 
 /**
+ * GET /api/transactions/user-spendings
+ * Get total spending by each user in the group
+ * 
+ * Request headers:
+ * - Authorization: Bearer <token>
+ */
+router.get('/user-spendings', authenticateToken, asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  const db = req.app.get('db');
+
+  // Get user's group
+  const userWithGroup = await new Promise((resolve, reject) => {
+    db.get(
+      'SELECT group_id FROM users WHERE id = ?',
+      [userId],
+      (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      }
+    );
+  });
+
+  if (!userWithGroup || !userWithGroup.group_id) {
+    return res.status(200).json({
+      success: true,
+      message: 'User is not in any group',
+      data: [],
+    });
+  }
+
+  // Get group details
+  const group = await new Promise((resolve, reject) => {
+    db.get(
+      'SELECT id FROM groups WHERE group_number = ?',
+      [userWithGroup.group_id],
+      (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      }
+    );
+  });
+
+  if (!group) {
+    return res.status(200).json({
+      success: true,
+      message: 'Group not found',
+      data: [],
+    });
+  }
+
+  // Get total spending by each user in the group
+  const userSpendings = await new Promise((resolve, reject) => {
+    db.all(
+      `SELECT 
+        u.id,
+        u.username,
+        u.first_name,
+        u.last_name,
+        COALESCE(SUM(p.amount), 0) as total_spent
+      FROM users u
+      LEFT JOIN payments p ON u.id = p.user_id AND p.group_id = ?
+      WHERE u.group_id = ?
+      GROUP BY u.id, u.username, u.first_name, u.last_name
+      ORDER BY total_spent DESC`,
+      [group.id, userWithGroup.group_id],
+      (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows);
+      }
+    );
+  });
+
+  res.status(200).json({
+    success: true,
+    message: 'User spendings retrieved successfully',
+    data: userSpendings,
+  });
+}));
+
+/**
  * GET /api/transactions/:id
  * Get a specific transaction by ID with all payment details
  * 
