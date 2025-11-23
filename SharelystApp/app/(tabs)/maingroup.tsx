@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -7,49 +7,123 @@ import {
   ScrollView,
   Pressable,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import axios from "axios";
+import { API_URL } from "@/config/api";
+import { useAuth } from "@/contexts/AuthContext";
+import { useFocusEffect } from "@react-navigation/native";
+
+interface Member {
+  id: number;
+  username: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+}
+
+interface GroupData {
+  id: number;
+  groupCode: number;
+  name: string;
+  description: string | null;
+  members: Member[];
+  createdAt: string;
+}
+
+interface Payment {
+  id: number;
+  amount: number;
+  user_id: number;
+  username: string;
+  first_name: string;
+  last_name: string;
+}
+
+interface Transaction {
+  id: number;
+  name: string;
+  total: number;
+  split: boolean;
+  payments: Payment[];
+  created_at: string;
+}
 
 export default function Home() {
   const router = useRouter();
+  const { token } = useAuth();
+  const [groupData, setGroupData] = useState<GroupData | null>(null);
+  const [totalBill, setTotalBill] = useState<number>(0);
+  const [recentActivities, setRecentActivities] = useState<Transaction[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const people = ["M", "A", "J", "R", "T"];
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchGroupData();
+    }, [])
+  );
 
-  const recentActivities = [
-    {
-      id: 1,
-      title: "Dinner at GrillHouse",
-      people: ["D", "A"],
-      amount: "$20",
-    },
-    {
-      id: 2,
-      title: "Coffee Run",
-      people: ["S", "D"],
-      amount: "$7",
-    },
-      {
-      id: 3,
-      title: "Coffee Run",
-      people: ["Y"],
-      amount: "$50",
-    },
-      {
-      id: 4,
-      title: "Coffee Run",
-      people: ["M"],
-      amount: "$10",
-    },
-  ];
+  const fetchGroupData = async () => {
+    try {
+      setIsLoading(true);
+      const [groupResponse, totalResponse, activitiesResponse] = await Promise.all([
+        axios.get(`${API_URL}/groups/my-group`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }),
+        axios.get(`${API_URL}/transactions/total`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }),
+        axios.get(`${API_URL}/transactions/my-group`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }),
+      ]);
 
-  const displayedPeople = people.slice(0, 4);
-  const hasOverflow = people.length > 4;
+      if (groupResponse.data.success && groupResponse.data.data) {
+        setGroupData(groupResponse.data.data);
+      }
+
+      if (totalResponse.data.success) {
+        setTotalBill(totalResponse.data.data.total || 0);
+      }
+
+      if (activitiesResponse.data.success) {
+        // Get only the 5 most recent activities
+        setRecentActivities(activitiesResponse.data.data.slice(0, 5));
+      }
+    } catch (error) {
+      console.error("Error fetching group data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getInitials = (firstName: string, lastName: string) => {
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  };
+
+  const displayedPeople = groupData?.members.slice(0, 4) || [];
+  const hasOverflow = (groupData?.members.length || 0) > 4;
+
+  if (isLoading) {
+    return (
+      <SafeAreaView className="flex-1 bg-white items-center justify-center">
+        <ActivityIndicator size="large" color="#007AFF" />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-white">
        <View className="flex flex-row justify-center">
-                  <Text className="text-3xl font-extrabold">Trip to Vegas !</Text>
+                  <Text className="text-3xl font-extrabold">{groupData?.name || "No Group"}</Text>
       </View>
       
       
@@ -63,7 +137,7 @@ export default function Home() {
           <View className="p-4">
             <Text className="text-lg font-semibold text-white">Total Bill</Text>
             <Text className="text-3xl font-bold text-white my-1">
-              $123.45
+              ${totalBill.toFixed(2)}
             </Text>
 
             <TouchableOpacity
@@ -85,14 +159,19 @@ export default function Home() {
           </View>
 
           <View className="flex-row space-x-3">
-            {displayedPeople.map((p, index) => (
+            {displayedPeople.map((member, index) => (
               <View
-                key={index}
+                key={member.id}
                 className="w-10 h-10 rounded-full border-[3px] border-black items-center justify-center mr-1">  
               
-                <Text className="font-extrabold">{p}</Text>
+                <Text className="font-extrabold">{getInitials(member.first_name, member.last_name)}</Text>
               </View>
             ))}
+            {hasOverflow && (
+              <View className="w-10 h-10 rounded-full border-[3px] border-black items-center justify-center mr-1">
+                <Text className="font-extrabold">+{(groupData?.members.length || 0) - 4}</Text>
+              </View>
+            )}
           </View>
         </View>
 
@@ -105,38 +184,46 @@ export default function Home() {
             </TouchableOpacity>
           </View>
           
-          <View className="flex-row justify-between">
-  {/* Left column: initials */}
-  <View>
-    {recentActivities.map((item) => (
-      <View key={item.id} className="flex-row mb-3">
-        {item.people.map((initial, idx) => (
-          <View
-            key={idx}
-            className="w-10 h-10 rounded-full border-[3px] border-black items-center justify-center mr-1"
-          >
-            <Text className="text-lg font-extrabold">{initial}</Text>
-          </View>
-        ))}
-      </View>
-    ))}
-  </View>
+          {recentActivities.length === 0 ? (
+            <View className="py-8 items-center">
+              <Text className="text-gray-500 text-base">No recent activities</Text>
+            </View>
+          ) : (
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              className="-mx-2"
+            >
+              {recentActivities.map((activity) => (
+                <View
+                  key={activity.id}
+                  className="bg-neutral-100 p-4 rounded-2xl mr-3 ml-2"
+                  style={{ width: 200 }}
+                >
+                  <Text className="text-base font-semibold mb-2" numberOfLines={2}>
+                    {activity.name}
+                  </Text>
 
-  {/* Right column: amounts */}
-  <View className="items-end">
-    {recentActivities.map((item) => (
-      <Text
-        key={item.id}
-        className="text-2xl font-extrabold mb-5"
-      >
-        {item.amount}
-      </Text>
-    ))}
-  </View>
-</View>
+                  <Text className="text-2xl font-extrabold mb-3">
+                    ${activity.total.toFixed(2)}
+                  </Text>
 
-
-          
+                  <View className="flex-row flex-wrap">
+                    {activity.payments.map((payment) => (
+                      <View
+                        key={payment.id}
+                        className="w-10 h-10 rounded-full border-[3px] border-black items-center justify-center mr-1 mb-1"
+                      >
+                        <Text className="text-sm font-extrabold">
+                          {getInitials(payment.first_name, payment.last_name)}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>

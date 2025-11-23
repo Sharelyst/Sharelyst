@@ -1,5 +1,5 @@
 // app/(tabs)/profile.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, Pressable, Image, Alert, ActivityIndicator } from "react-native";
 import { useAuth } from "@/contexts/AuthContext";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -7,9 +7,49 @@ import { router } from "expo-router";
 import axios from "axios";
 import { API_URL } from "@/config/api";
 
+interface UserProfile {
+  id: number;
+  username: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+}
+
 export default function ProfileScreen() {
-  const { logout, token } = useAuth();
+  const { logout, token, user } = useAuth();
   const [isLeavingGroup, setIsLeavingGroup] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchUserProfile();
+  }, [user]);
+
+  const fetchUserProfile = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axios.get(
+        `${API_URL}/auth/me`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success && response.data.data) {
+        setUserProfile(response.data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getInitials = (firstName: string, lastName: string) => {
+    return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
+  };
 
   const handleLeaveGroup = async () => {
     Alert.alert(
@@ -61,19 +101,29 @@ export default function ProfileScreen() {
     );
   };
 
+  if (isLoading) {
+    return (
+      <SafeAreaView className="flex-1 bg-white items-center justify-center">
+        <ActivityIndicator size="large" color="#007AFF" />
+      </SafeAreaView>
+    );
+  }
+
   return (
 
         <SafeAreaView className="flex-1 bg-white">
             <View className="flex-1 items-center pt-20">
       <View className="w-24 h-24 rounded-full bg-blue-500 items-center justify-center">
-        <Text className="text-white text-4xl font-bold">MZ</Text>
+        <Text className="text-white text-4xl font-bold">
+          {userProfile ? getInitials(userProfile.first_name, userProfile.last_name) : 'NA'}
+        </Text>
       </View>
 
       <Text className="text-2xl font-extrabold mt-5">
-        Muhammad Zamin
+        {userProfile ? `${userProfile.first_name} ${userProfile.last_name}` : 'User'}
       </Text>
       <Text className="text-base text-gray-500 mb-10">
-        example@email.com
+        {userProfile?.email || 'No email'}
       </Text>
 
       <TouchableOpacity

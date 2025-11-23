@@ -17,6 +17,7 @@ const { errorHandler, notFound } = require('./middleware/errorHandler');
 // Import routes
 const authRoutes = require('./routes/auth');
 const groupRoutes = require('./routes/groups');
+const transactionRoutes = require('./routes/transactions');
 
 // Initialize Express app
 const app = express();
@@ -109,6 +110,7 @@ app.get('/health', (req, res) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/groups', groupRoutes);
+app.use('/api/transactions', transactionRoutes);
 
 // 404 handler
 app.use(notFound);
