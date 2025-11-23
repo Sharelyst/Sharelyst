@@ -7,9 +7,14 @@ import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { Home, BookOpen, Users, User } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const insets = useSafeAreaInsets();
+
+  // Calculate dynamic tab bar height based on safe area insets
+  const tabBarHeight = 50 + insets.bottom;
 
   return (
     <View style={{ flex: 1 }}>
@@ -20,8 +25,8 @@ export default function TabLayout() {
           tabBarButton: HapticTab,
           tabBarStyle: {
             backgroundColor: '#D3D3D3',
-            height: 60,
-            paddingBottom: 8,
+            height: tabBarHeight,
+            paddingBottom: Math.max(insets.bottom, 8),
             paddingTop: 8,
           },
           tabBarShowLabel: false,
@@ -58,7 +63,7 @@ export default function TabLayout() {
       
       {/* Floating Add Activity Button */}
       <TouchableOpacity
-        style={styles.floatingButton}
+        style={[styles.floatingButton, { bottom: tabBarHeight - 20 }]}
         onPress={() => router.push("/addactivity")}
         activeOpacity={0.8}
       >
@@ -71,7 +76,7 @@ export default function TabLayout() {
 const styles = StyleSheet.create({
   floatingButton: {
     position: 'absolute',
-    bottom: 70, // Adjusted for the 60px tab bar height
+    bottom: 40, // Adjusted for the 60px tab bar height
     alignSelf: 'center',
     backgroundColor: '#007AFF',
     width: 56,
