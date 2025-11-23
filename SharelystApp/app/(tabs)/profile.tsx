@@ -16,7 +16,7 @@ interface UserProfile {
 }
 
 export default function ProfileScreen() {
-  const { logout, token, user } = useAuth();
+  const { logout, token, user, navigationPreference, setNavigationPreference } = useAuth();
   const [isLeavingGroup, setIsLeavingGroup] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -125,6 +125,28 @@ export default function ProfileScreen() {
       <Text className="text-base text-gray-500 mb-10">
         {userProfile?.email || 'No email'}
       </Text>
+
+      <View className="mb-6 w-64">
+        <Text className="text-lg font-semibold mb-3 text-center">Navigation Style</Text>
+        <View className="flex-row justify-center space-x-4">
+          <TouchableOpacity
+            className={`py-2 px-6 rounded-xl ${navigationPreference === 'navbar' ? 'bg-blue-500' : 'bg-gray-300'}`}
+            onPress={() => setNavigationPreference('navbar')}
+          >
+            <Text className={`font-semibold ${navigationPreference === 'navbar' ? 'text-white' : 'text-gray-700'}`}>
+              Navigation Bar
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            className={`py-2 px-6 rounded-xl ${navigationPreference === 'hamburger' ? 'bg-blue-500' : 'bg-gray-300'}`}
+            onPress={() => setNavigationPreference('hamburger')}
+          >
+            <Text className={`font-semibold ${navigationPreference === 'hamburger' ? 'text-white' : 'text-gray-700'}`}>
+              Hamburger Menu
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
 
       <TouchableOpacity
         className="py-3 px-6 bg-orange-500 rounded-xl mb-4"
