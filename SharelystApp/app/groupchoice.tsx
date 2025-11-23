@@ -24,7 +24,7 @@ export default function GroupChoice() {
 
       if (response.data.success && response.data.data) {
         // User is already in a group, redirect to main group page
-        router.replace('/maingroup');
+        router.replace('/(tabs)/maingroup');
       } else {
         // User is not in a group, show options
         setIsCheckingGroup(false);

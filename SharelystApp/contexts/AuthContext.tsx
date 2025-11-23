@@ -45,6 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = React.useState<string | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [isRegistering, setIsRegistering] = React.useState(false);
 
   // Load token from secure storage on mount
   React.useEffect(() => {
@@ -201,9 +202,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     password: string,
     confirmPassword: string
   ) => {
+    // Prevent double registration
+    if (isRegistering) {
+      console.log("Registration already in progress, skipping duplicate call");
+      return;
+    }
+
     try {
       setError(null);
       setIsLoading(true);
+      setIsRegistering(true);
 
       console.log("Registering user with:", { username, firstName, lastName, email });
       console.log("API URL:", `${API_BASE_URL}/auth/register`);
@@ -254,13 +262,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("Registration response:", response.data);
 
       if (response.data.success) {
-        const { token: newToken, ...userData } = response.data.data;
-        
-        // Store token securely
-        await SecureStore.setItemAsync(TOKEN_KEY, newToken);
-        
-        setToken(newToken);
-        setUser(userData);
+        // Registration successful - don't auto-login, let user go to login page
+        console.log("User registered successfully, navigate to login");
       } else {
         throw new Error(response.data.message || "Registration failed");
       }
@@ -277,6 +280,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw new Error(errorMessage);
     } finally {
       setIsLoading(false);
+      setIsRegistering(false);
     }
   };
 

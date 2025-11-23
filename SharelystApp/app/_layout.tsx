@@ -36,10 +36,8 @@ function RootLayoutNav() {
         router.replace('/login');
       }
     } else {
-      // User is authenticated, redirect away from auth screens
-      if (segments[0] === 'login' || segments[0] === 'register') {
-         router.replace('/groupchoice');
-      }
+      // User is authenticated, allow navigation to proceed
+      // Group check will be handled by the groupchoice page
     }
   }, [isAuthenticated, segments, isLoading]);
 

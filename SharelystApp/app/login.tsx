@@ -18,13 +18,15 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
+import axios from "axios";
+import { API_URL } from "@/config/api";
 
 export default function LoginScreen() {
   const [identifier, setIdentifier] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
   
-  const { login, error } = useAuth();
+  const { login, error, token } = useAuth();
   const router = useRouter();
 
   /**
@@ -45,7 +47,9 @@ export default function LoginScreen() {
     try {
       setIsLoading(true);
       await login(identifier.trim(), password);
-      // Navigation will be handled by AuthContext/root layout
+      // After successful login, redirect to group choice page
+      // The group choice page will handle checking if user has a group
+      router.replace('/groupchoice');
     } catch (error: any) {
       Alert.alert("Login Failed", error.message || "Invalid credentials");
     } finally {

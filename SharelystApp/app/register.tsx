@@ -27,6 +27,7 @@ export default function RegisterScreen() {
   const [password, setPassword] = React.useState("");
   const [confirmPassword, setConfirmPassword] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
+  const [isRegistered, setIsRegistered] = React.useState(false);
   
   const { register, error } = useAuth();
   const router = useRouter();
@@ -42,7 +43,13 @@ export default function RegisterScreen() {
   /**
    * Handle registration submission
    */
-  const handleRegister = async () => {
+  const handleRegister = React.useCallback(async () => {
+    // Prevent double submission
+    if (isLoading || isRegistered) {
+      console.log("Registration blocked - isLoading:", isLoading, "isRegistered:", isRegistered);
+      return;
+    }
+
     // Validate inputs
     if (!username.trim()) {
       Alert.alert("Error", "Please enter a username");
@@ -99,13 +106,25 @@ export default function RegisterScreen() {
         password,
         confirmPassword
       );
-      // Navigation will be handled by AuthContext/root layout
+      setIsRegistered(true);
+      
+      // Show success message and navigate to login
+      Alert.alert(
+        "Registration Successful",
+        "Your account has been created. Please log in.",
+        [
+          {
+            text: "OK",
+            onPress: () => router.replace('/login')
+          }
+        ]
+      );
     } catch (error: any) {
       Alert.alert("Registration Failed", error.message || "Unable to create account");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [isLoading, isRegistered, username, firstName, lastName, email, password, confirmPassword, register, router]);
 
 
 

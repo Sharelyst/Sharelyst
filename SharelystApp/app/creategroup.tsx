@@ -47,7 +47,8 @@ export default function CreateGroup() {
   };
 
   const handleContinue = () => {
-    router.replace('/maingroup');
+    // Use push instead of replace to ensure navigation context is available
+    router.push('/(tabs)/maingroup');
   };
 
   if (generatedCode) {
