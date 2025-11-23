@@ -226,6 +226,21 @@ export default function Home() {
           )}
         </View>
       </ScrollView>
+
+      {/* Floating Add Button - Centered */}
+      <TouchableOpacity
+        className="absolute bottom-6 self-center bg-blue-500 w-16 h-16 rounded-full items-center justify-center shadow-lg"
+        onPress={() => router.push("/addactivity")}
+        style={{
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.25,
+          shadowRadius: 3.84,
+          elevation: 5,
+        }}
+      >
+        <Text className="text-white text-4xl font-light">+</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
