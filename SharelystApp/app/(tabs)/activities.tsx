@@ -93,7 +93,11 @@ export default function ActivitiesScreen() {
             </View>
           ) : (
             activities.map((activity) => (
-              <View key={activity.id} className="bg-neutral-100 p-4 rounded-2xl mb-3">
+              <Pressable
+                key={activity.id}
+                onPress={() => router.push(`/activitydetails?id=${activity.id}`)}
+                className="bg-neutral-100 p-4 rounded-2xl mb-3 active:bg-neutral-200"
+              >
                 <Text className="text-base font-semibold mb-1">
                   {activity.name}
                 </Text>
@@ -114,7 +118,7 @@ export default function ActivitiesScreen() {
                     </View>
                   ))}
                 </View>
-              </View>
+              </Pressable>
             ))
           )}
         </ScrollView>

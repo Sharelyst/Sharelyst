@@ -76,38 +76,53 @@ export default function Home() {
 
     try {
       setIsLoading(true);
-      const [groupResponse, totalResponse, activitiesResponse] = await Promise.all([
-        axios.get(`${API_URL}/groups/my-group`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }),
-        axios.get(`${API_URL}/transactions/total`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }),
-        axios.get(`${API_URL}/transactions/my-group`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }),
-      ]);
+      
+      // Fetch group data first
+      const groupResponse = await axios.get(`${API_URL}/groups/my-group`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-      if (groupResponse.data.success && groupResponse.data.data) {
-        setGroupData(groupResponse.data.data);
-      }
+      if (groupResponse.data.success) {
+        if (groupResponse.data.data) {
+          setGroupData(groupResponse.data.data);
+          
+          // Only fetch transactions if user is in a group
+          try {
+            const [totalResponse, activitiesResponse] = await Promise.all([
+              axios.get(`${API_URL}/transactions/total`, {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }),
+              axios.get(`${API_URL}/transactions/my-group`, {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }),
+            ]);
 
-      if (totalResponse.data.success) {
-        setTotalBill(totalResponse.data.data.total || 0);
-      }
+            if (totalResponse.data.success) {
+              setTotalBill(totalResponse.data.data.total || 0);
+            }
 
-      if (activitiesResponse.data.success) {
-        // Get only the 5 most recent activities
-        setRecentActivities(activitiesResponse.data.data.slice(0, 5));
+            if (activitiesResponse.data.success) {
+              // Get only the 5 most recent activities
+              setRecentActivities(activitiesResponse.data.data.slice(0, 5));
+            }
+          } catch (transactionError) {
+            console.error("Error fetching transaction data:", transactionError);
+            // Don't fail the whole page if transactions fail
+          }
+        } else {
+          // User is not in a group
+          setGroupData(null);
+        }
       }
     } catch (error) {
       console.error("Error fetching group data:", error);
+      // Don't set groupData to null on error, keep previous state
     } finally {
       setIsLoading(false);
     }
@@ -124,6 +139,39 @@ export default function Home() {
     return (
       <SafeAreaView className="flex-1 bg-white items-center justify-center">
         <ActivityIndicator size="large" color="#007AFF" />
+      </SafeAreaView>
+    );
+  }
+
+  if (!groupData) {
+    return (
+      <SafeAreaView className="flex-1 bg-white">
+        <View className="flex flex-row justify-center py-4">
+          <Text className="text-3xl font-extrabold">No Group</Text>
+        </View>
+        
+        <View className="flex-1 items-center justify-center px-6">
+          <Text className="text-xl font-semibold mb-4 text-center">
+            You're not in a group yet
+          </Text>
+          <Text className="text-gray-500 text-center mb-6">
+            Create a new group or join an existing one to start tracking expenses
+          </Text>
+          
+          <TouchableOpacity
+            className="bg-blue-500 py-3 px-6 rounded-lg mb-3"
+            onPress={() => router.push("/creategroup")}
+          >
+            <Text className="text-white font-semibold text-base">Create Group</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            className="bg-gray-200 py-3 px-6 rounded-lg"
+            onPress={() => router.push("/findgroup")}
+          >
+            <Text className="text-gray-700 font-semibold text-base">Join Group</Text>
+          </TouchableOpacity>
+        </View>
       </SafeAreaView>
     );
   }

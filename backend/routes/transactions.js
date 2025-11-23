@@ -188,6 +188,14 @@ router.get('/my-group', authenticateToken, asyncHandler(async (req, res) => {
     );
   });
 
+  if (!group) {
+    return res.status(200).json({
+      success: true,
+      message: 'Group not found',
+      data: [],
+    });
+  }
+
   // Get all transactions for the group
   const transactions = await new Promise((resolve, reject) => {
     db.all(
@@ -274,6 +282,14 @@ router.get('/total', authenticateToken, asyncHandler(async (req, res) => {
     );
   });
 
+  if (!group) {
+    return res.status(200).json({
+      success: true,
+      message: 'Group not found',
+      data: { total: 0 },
+    });
+  }
+
   // Get total
   const result = await new Promise((resolve, reject) => {
     db.get(
@@ -291,6 +307,91 @@ router.get('/total', authenticateToken, asyncHandler(async (req, res) => {
     message: 'Total retrieved successfully',
     data: {
       total: result.total || 0,
+    },
+  });
+}));
+
+/**
+ * GET /api/transactions/:id
+ * Get a specific transaction by ID with all payment details
+ * 
+ * Request headers:
+ * - Authorization: Bearer <token>
+ */
+router.get('/:id', authenticateToken, asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  const transactionId = req.params.id;
+  const db = req.app.get('db');
+
+  // Get user's group
+  const userWithGroup = await new Promise((resolve, reject) => {
+    db.get(
+      'SELECT group_id FROM users WHERE id = ?',
+      [userId],
+      (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      }
+    );
+  });
+
+  if (!userWithGroup || !userWithGroup.group_id) {
+    throw new ApiError(403, 'You must be in a group to view transactions');
+  }
+
+  // Get group details
+  const group = await new Promise((resolve, reject) => {
+    db.get(
+      'SELECT id FROM groups WHERE group_number = ?',
+      [userWithGroup.group_id],
+      (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      }
+    );
+  });
+
+  if (!group) {
+    throw new ApiError(404, 'Group not found');
+  }
+
+  // Get the transaction
+  const transaction = await new Promise((resolve, reject) => {
+    db.get(
+      'SELECT * FROM transactions WHERE id = ? AND group_id = ?',
+      [transactionId, group.id],
+      (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      }
+    );
+  });
+
+  if (!transaction) {
+    throw new ApiError(404, 'Transaction not found or you do not have access to it');
+  }
+
+  // Get payments for this transaction
+  const payments = await new Promise((resolve, reject) => {
+    db.all(
+      `SELECT p.*, u.username, u.first_name, u.last_name 
+       FROM payments p 
+       JOIN users u ON p.user_id = u.id 
+       WHERE p.transaction_id = ?`,
+      [transaction.id],
+      (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows);
+      }
+    );
+  });
+
+  res.status(200).json({
+    success: true,
+    message: 'Transaction retrieved successfully',
+    data: {
+      ...transaction,
+      payments,
     },
   });
 }));
