@@ -6,10 +6,10 @@
 import React from "react";
 import * as SecureStore from "expo-secure-store";
 import axios from "axios";
+import { API_URL } from "../config/api";
 
-// API Base URL - Production backend hosted on Render
-// This makes the frontend completely independent from any local backend setup
-const API_BASE_URL = "https://sharelystbackend.onrender.com/api";
+// API Base URL - Automatically switches between development and deployment
+const API_BASE_URL = `${API_URL}/api`;
 
 // Token storage key
 const TOKEN_KEY = "auth_token";

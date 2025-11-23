@@ -1,5 +1,8 @@
 #!/usr/bin/env pwsh
 
+# Set environment to deployment
+$env:EXPO_PUBLIC_ENV = "deployment"
+
 # Navigate to the frontend directory
 Set-Location -Path "$PSScriptRoot\SharelystApp"
 
