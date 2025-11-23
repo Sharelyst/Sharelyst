@@ -153,15 +153,24 @@ router.post('/login', asyncHandler(async (req, res) => {
 
   // Check if user exists
   if (!user) {
+    console.log(`❌ Login failed: User not found with identifier "${identifier}"`);
     throw new ApiError(401, 'Invalid credentials');
   }
+
+  console.log(`✓ User found: ${user.username} (${user.email})`);
+  console.log(`Password info: length=${password.length}, first char="${password[0]}", last char="${password[password.length-1]}"`);
 
   // Verify password
   const isPasswordValid = await bcrypt.compare(password, user.password_hash);
 
   if (!isPasswordValid) {
+    console.log(`❌ Login failed: Invalid password for user "${user.username}"`);
+    console.log(`Expected password hash starts with: ${user.password_hash.substring(0, 20)}...`);
     throw new ApiError(401, 'Invalid credentials');
   }
+
+  console.log(`✓ Password valid for user "${user.username}"`);
+
 
   // Generate JWT token
   const token = jwt.sign(
