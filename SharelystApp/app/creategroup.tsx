@@ -1,7 +1,7 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Pressable, Text, View, TextInput, ActivityIndicator, Alert } from "react-native";
-import { useRouter, useNavigation } from 'expo-router';
-import React, { useState, useCallback, useEffect } from 'react';
+import { useRouter } from 'expo-router';
+import React, { useState, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import { API_URL } from '../config/api';
@@ -11,22 +11,8 @@ export default function CreateGroup() {
   const [description, setDescription] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [generatedCode, setGeneratedCode] = useState<number | null>(null);
-  const [isReady, setIsReady] = useState(false);
   const { token } = useAuth();
   const router = useRouter();
-  const navigation = useNavigation();
-
-  useEffect(() => {
-    // Ensure navigation is ready before rendering
-    const unsubscribe = navigation.addListener('focus', () => {
-      setIsReady(true);
-    });
-
-    // Set ready immediately if already focused
-    setIsReady(true);
-
-    return unsubscribe;
-  }, [navigation]);
 
   const handleCreateGroup = async () => {
     if (!groupName.trim()) {
@@ -71,14 +57,6 @@ export default function CreateGroup() {
       Alert.alert('Error', 'Failed to navigate. Please try again.');
     }
   }, [router]);
-
-  if (!isReady) {
-    return (
-      <SafeAreaView className="flex-1 bg-[#F2F2F2] items-center justify-center">
-        <ActivityIndicator size="large" color="#8B5CF6" />
-      </SafeAreaView>
-    );
-  }
 
   if (generatedCode) {
     return (

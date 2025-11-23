@@ -63,7 +63,7 @@ export default function GroupChoice() {
         {/* Create Group Button */}
         <View className="mb-6">
           <Pressable 
-            onPress={() => router.push('/creategroup' as any)}
+            onPress={() => router.push('/creategroup')}
             className="w-full rounded-2xl bg-[#8B5CF6] py-5 items-center justify-center shadow-lg"
           >
             <Text className="text-white text-xl font-bold mb-1">Create New Group</Text>
