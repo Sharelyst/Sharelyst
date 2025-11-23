@@ -60,7 +60,7 @@ export default function CreateGroup() {
 
   if (generatedCode) {
     return (
-      <SafeAreaView className="flex-1 bg-[#F2F2F2]">
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#F2F2F2' }} key="success">
         <View className="flex-1 px-6 pt-8 justify-center">
           {/* Success Message */}
           <View className="flex flex-row justify-center mb-8">
@@ -107,7 +107,7 @@ export default function CreateGroup() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F2F2F2]">
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#F2F2F2' }} key="form">
       <View className="flex-1 px-6 pt-8">
         {/* Header */}
         <View className="flex flex-row justify-center mb-8">
