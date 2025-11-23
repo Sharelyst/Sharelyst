@@ -12,16 +12,17 @@ const userQueries = {
   // Create a new user
   createUser: async (userData) => {
     const sql = `
-      INSERT INTO users (first_name, last_name, email, phone, password, group_id)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO users (username, first_name, last_name, email, phone, password_hash, group_id)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *
     `;
     const values = [
+      userData.username,
       userData.first_name,
       userData.last_name,
       userData.email,
       userData.phone,
-      userData.password,
+      userData.password_hash,
       userData.group_id
     ];
     return await query(sql, values);

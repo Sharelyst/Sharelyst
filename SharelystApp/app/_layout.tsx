@@ -28,6 +28,7 @@ function RootLayoutNav() {
     }
 
     const inAuthGroup = segments[0] === '(tabs)';
+    const inGroupFlow = segments[0] === 'groupchoice' || segments[0] === 'creategroup' || segments[0] === 'findgroup';
 
     if (!isAuthenticated) {
       // User is not authenticated, redirect to login
@@ -37,7 +38,7 @@ function RootLayoutNav() {
     } else {
       // User is authenticated, redirect away from auth screens
       if (segments[0] === 'login' || segments[0] === 'register') {
-         router.replace('/findgroup');
+         router.replace('/groupchoice');
       }
     }
   }, [isAuthenticated, segments, isLoading]);
@@ -47,6 +48,9 @@ function RootLayoutNav() {
       <Stack>
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="register" options={{ headerShown: false }} />
+        <Stack.Screen name="groupchoice" options={{ headerShown: false }} />
+        <Stack.Screen name="creategroup" options={{ headerShown: false }} />
+        <Stack.Screen name="findgroup" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
       </Stack>

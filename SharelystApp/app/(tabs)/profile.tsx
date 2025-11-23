@@ -11,16 +11,6 @@ export default function ProfileScreen() {
   return (
 
         <SafeAreaView className="flex-1 bg-white">
-
-
-
-                    <View className="flex flex-row justify-between mb-5">
-                                <Pressable onPress={() => router.back()}>
-                                <Image source={require('@/assets/images/arrow_back.png')} className="width: 6, height: 6"  />
-                                </Pressable>
-                              
-                              <View className='w-6 h-6'></View>
-                  </View>
             <View className="flex-1 items-center pt-20">
       <View className="w-24 h-24 rounded-full bg-blue-500 items-center justify-center">
         <Text className="text-white text-4xl font-bold">MZ</Text>

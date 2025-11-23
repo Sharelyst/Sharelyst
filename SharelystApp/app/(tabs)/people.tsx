@@ -9,21 +9,6 @@ export default function People() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-
-
-                <View className="flex flex-row justify-between mb-5">
-                                <Pressable onPress={() => router.back()}>
-                                <Image source={require('@/assets/images/arrow_back.png')} className="width: 6, height: 6"  />
-                                </Pressable>
-                              
-                                 
-                              <Text className="text-3xl font-extrabold">Recent Activities</Text>
-                              <View className='w-6 h-6'></View>
-                  </View>
-
-
-
-
           <ScrollView className="flex-1 p-4">
       <Text className="text-2xl font-extrabold mb-4">Group Members</Text>
 

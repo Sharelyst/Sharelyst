@@ -48,15 +48,8 @@ export default function Home() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      
-       <View className="flex flex-row justify-between">
-                    <Pressable onPress={() => router.back()}>
-                    <Image source={require('@/assets/images/arrow_back.png')} className="width: 6, height: 6"  />
-                    </Pressable>
-                  
-                     
+       <View className="flex flex-row justify-center">
                   <Text className="text-3xl font-extrabold">Trip to Vegas !</Text>
-                  <View className='w-6 h-6'></View>
       </View>
       
       

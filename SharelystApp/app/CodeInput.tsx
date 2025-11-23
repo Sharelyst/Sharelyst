@@ -1,13 +1,20 @@
 import React, { useRef, useState } from "react";
 import { View, Text, TextInput, Pressable } from "react-native";
 
-export default function CodeInput() {
+interface CodeInputProps {
+  onCodeChange?: (code: string) => void;
+}
+
+export default function CodeInput({ onCodeChange }: CodeInputProps) {
   const [code, setCode] = useState("");
   const inputRef = useRef<TextInput | null>(null);
 
   const handleChange = (value: string) => {
     const numeric = value.replace(/[^0-9]/g, "");
-    if (numeric.length <= 6) {setCode(numeric);}
+    if (numeric.length <= 6) {
+      setCode(numeric);
+      onCodeChange?.(numeric);
+    }
   };
 
   

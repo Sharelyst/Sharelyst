@@ -21,6 +21,8 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export default function RegisterScreen() {
   const [username, setUsername] = React.useState("");
+  const [firstName, setFirstName] = React.useState("");
+  const [lastName, setLastName] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [confirmPassword, setConfirmPassword] = React.useState("");
@@ -52,6 +54,16 @@ export default function RegisterScreen() {
       return;
     }
 
+    if (!firstName.trim()) {
+      Alert.alert("Error", "Please enter your first name");
+      return;
+    }
+
+    if (!lastName.trim()) {
+      Alert.alert("Error", "Please enter your last name");
+      return;
+    }
+
     if (!email.trim()) {
       Alert.alert("Error", "Please enter your email");
       return;
@@ -79,7 +91,14 @@ export default function RegisterScreen() {
 
     try {
       setIsLoading(true);
-      await register(username.trim(), email.trim(), password, confirmPassword);
+      await register(
+        username.trim(),
+        firstName.trim(),
+        lastName.trim(),
+        email.trim(),
+        password,
+        confirmPassword
+      );
       // Navigation will be handled by AuthContext/root layout
     } catch (error: any) {
       Alert.alert("Registration Failed", error.message || "Unable to create account");
@@ -88,12 +107,7 @@ export default function RegisterScreen() {
     }
   };
 
-  /**
-   * Navigate back to login screen
-   */
-  const handleBackToLogin = () => {
-    router.back();
-  };
+
 
   return (
     <KeyboardAvoidingView
@@ -126,6 +140,37 @@ export default function RegisterScreen() {
               />
             </View>
 
+            {/* First Name and Last Name Row */}
+            <View style={styles.rowContainer}>
+              <View style={styles.halfInputContainer}>
+                <Text style={styles.label}>First Name</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="First name"
+                  placeholderTextColor="#999"
+                  value={firstName}
+                  onChangeText={setFirstName}
+                  autoCapitalize="words"
+                  autoCorrect={false}
+                  editable={!isLoading}
+                />
+              </View>
+
+              <View style={styles.halfInputContainer}>
+                <Text style={styles.label}>Last Name</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Last name"
+                  placeholderTextColor="#999"
+                  value={lastName}
+                  onChangeText={setLastName}
+                  autoCapitalize="words"
+                  autoCorrect={false}
+                  editable={!isLoading}
+                />
+              </View>
+            </View>
+
             {/* Email Input */}
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Email</Text>
@@ -142,32 +187,33 @@ export default function RegisterScreen() {
               />
             </View>
 
-            {/* Password Input */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Password</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Create a password (min 6 characters)"
-                placeholderTextColor="#999"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                editable={!isLoading}
-              />
-            </View>
+            {/* Password and Confirm Password Row */}
+            <View style={styles.rowContainer}>
+              <View style={styles.halfInputContainer}>
+                <Text style={styles.label}>Password</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Password (min 6)"
+                  placeholderTextColor="#999"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                  editable={!isLoading}
+                />
+              </View>
 
-            {/* Confirm Password Input */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Confirm Password</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Re-enter your password"
-                placeholderTextColor="#999"
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                secureTextEntry
-                editable={!isLoading}
-              />
+              <View style={styles.halfInputContainer}>
+                <Text style={styles.label}>Confirm Password</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Confirm password"
+                  placeholderTextColor="#999"
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  secureTextEntry
+                  editable={!isLoading}
+                />
+              </View>
             </View>
 
             {/* Error Message */}
@@ -190,13 +236,7 @@ export default function RegisterScreen() {
               )}
             </TouchableOpacity>
 
-            {/* Login Link */}
-            <View style={styles.loginContainer}>
-              <Text style={styles.loginText}>Already have an account? </Text>
-              <TouchableOpacity onPress={handleBackToLogin} disabled={isLoading}>
-                <Text style={styles.loginLink}>Login</Text>
-              </TouchableOpacity>
-            </View>
+
           </View>
         </View>
       </ScrollView>
@@ -235,6 +275,15 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     marginBottom: 20,
+  },
+  rowContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+  halfInputContainer: {
+    flex: 1,
+    marginHorizontal: 5,
   },
   label: {
     fontSize: 14,

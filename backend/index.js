@@ -16,6 +16,7 @@ const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 // Import routes
 const authRoutes = require('./routes/auth');
+const groupRoutes = require('./routes/groups');
 
 // Initialize Express app
 const app = express();
@@ -107,6 +108,7 @@ app.get('/health', (req, res) => {
 
 // API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/groups', groupRoutes);
 
 // 404 handler
 app.use(notFound);
@@ -136,6 +138,15 @@ const server = app.listen(config.server.port, config.server.host, () => {
   console.log(`Local: http://localhost:${config.server.port}`);
   console.log(`Android Emulator: http://10.0.2.2:${config.server.port}`);
   console.log('='.repeat(50));
+});
+
+// Add error handler for server
+server.on('error', (error) => {
+  console.error('❌ Server Error:', error.message);
+  if (error.code === 'EADDRINUSE') {
+    console.error(`Port ${config.server.port} is already in use`);
+  }
+  process.exit(1);
 });
 
 module.exports = { app, db };

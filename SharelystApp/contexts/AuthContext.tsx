@@ -6,10 +6,10 @@
 import React from "react";
 import * as SecureStore from "expo-secure-store";
 import axios from "axios";
-import { API_URL } from "../config/api";
+import { API_URL, FALLBACK_API_URLS } from "../config/api";
 
 // API Base URL - Automatically switches between development and deployment
-const API_BASE_URL = `${API_URL}/api`;
+const API_BASE_URL = API_URL;
 
 // Token storage key
 const TOKEN_KEY = "auth_token";
@@ -28,6 +28,8 @@ interface AuthContextType {
   login: (identifier: string, password: string) => Promise<void>;
   register: (
     username: string,
+    firstName: string,
+    lastName: string,
     email: string,
     password: string,
     confirmPassword: string
@@ -107,15 +109,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("Logging in user:", identifier);
       console.log("API URL:", `${API_BASE_URL}/auth/login`);
 
-      const response = await axios.post(`${API_BASE_URL}/auth/login`, {
+      const requestBody = {
         identifier,
         password,
-      }, {
-        timeout: 15000, // 15 second timeout for slower connections
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      };
+
+      let response;
+      let lastError;
+      const urlsToTry = [API_BASE_URL, ...FALLBACK_API_URLS];
+
+      // Try primary URL first, then fallbacks
+      for (let i = 0; i < urlsToTry.length; i++) {
+        const currentUrl = urlsToTry[i];
+        try {
+          console.log(`Attempting login with URL (${i + 1}/${urlsToTry.length}):`, `${currentUrl}/auth/login`);
+          
+          response = await axios.post(`${currentUrl}/auth/login`, requestBody, {
+            timeout: 8000, // 8 second timeout per attempt
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          console.log("Login successful!");
+          break; // Success, exit the loop
+        } catch (attemptError: any) {
+          lastError = attemptError;
+          console.log(`URL ${i + 1} failed:`, attemptError.message);
+          
+          // If this is the last URL, throw the error
+          if (i === urlsToTry.length - 1) {
+            throw attemptError;
+          }
+          // Otherwise, continue to next URL
+        }
+      }
+
+      if (!response) {
+        throw lastError || new Error("All connection attempts failed");
+      }
 
       console.log("Login response:", response.data);
 
@@ -135,10 +167,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         message: error.message,
         response: error.response?.data,
         status: error.response?.status,
+        code: error.code,
       });
       
-      // Show generic error message to user for security
-      const errorMessage = "Invalid credentials";
+      // Provide more helpful error messages based on error type
+      let errorMessage = "Invalid credentials";
+      
+      if (error.message?.includes("timeout")) {
+        errorMessage = "Connection timeout. Please check if the backend server is running.";
+      } else if (error.message?.includes("Network Error") || error.code === "ECONNREFUSED") {
+        errorMessage = "Cannot connect to server. Please ensure the backend is running.";
+      } else if (error.response?.status === 401) {
+        errorMessage = "Invalid username or password";
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -151,6 +195,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    */
   const register = async (
     username: string,
+    firstName: string,
+    lastName: string,
     email: string,
     password: string,
     confirmPassword: string
@@ -159,20 +205,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setError(null);
       setIsLoading(true);
 
-      console.log("Registering user with:", { username, email });
+      console.log("Registering user with:", { username, firstName, lastName, email });
       console.log("API URL:", `${API_BASE_URL}/auth/register`);
 
-      const response = await axios.post(`${API_BASE_URL}/auth/register`, {
+      const requestBody = {
         username,
+        firstName,
+        lastName,
         email,
         password,
         confirmPassword,
-      }, {
-        timeout: 15000, // 15 second timeout for slower connections
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      };
+
+      let response;
+      let lastError;
+      
+      // Try primary URL first
+      try {
+        response = await axios.post(`${API_BASE_URL}/auth/register`, requestBody, {
+          timeout: 15000,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      } catch (primaryError: any) {
+        console.log("Primary URL failed, trying fallbacks...");
+        lastError = primaryError;
+        
+        // Try fallback URLs
+        for (const fallbackUrl of FALLBACK_API_URLS) {
+          try {
+            console.log("Trying fallback URL:", `${fallbackUrl}/auth/register`);
+            response = await axios.post(`${fallbackUrl}/auth/register`, requestBody, {
+              timeout: 15000,
+              headers: { 'Content-Type': 'application/json' },
+            });
+            console.log("Fallback URL succeeded!");
+            break;
+          } catch (fallbackError: any) {
+            console.log("Fallback URL failed:", fallbackUrl);
+            lastError = fallbackError;
+          }
+        }
+        
+        if (!response) {
+          throw lastError;
+        }
+      }
 
       console.log("Registration response:", response.data);
 
