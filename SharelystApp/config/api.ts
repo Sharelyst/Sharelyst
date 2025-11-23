@@ -9,7 +9,7 @@ const getApiUrl = (): string => {
   // For development:
   // IP address is automatically updated by scripts/update-ip.js
   // Run 'npm start' to auto-detect your computer's IP
-  return 'http://192.168.2.19:3000/api';
+  return 'http://192.168.2.150:3000/api';
 };
 
 // Fallback URLs to try if the primary URL fails
