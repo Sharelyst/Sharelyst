@@ -232,22 +232,40 @@ export default function Home() {
             </TouchableOpacity>
           </View>
 
+                    {/* ABility to click on Member's icon to go into another page */}
           <View className="flex-row space-x-3">
-            {displayedPeople.map((member, index) => (
-              <View
-                key={member.id}
-                className="w-10 h-10 rounded-full border-[3px] border-black items-center justify-center mr-1">  
-              
-                <Text className="font-extrabold">{getInitials(member.first_name, member.last_name)}</Text>
-              </View>
-            ))}
-            {hasOverflow && (
-              <View className="w-10 h-10 rounded-full border-[3px] border-black items-center justify-center mr-1">
-                <Text className="font-extrabold">+{(groupData?.members.length || 0) - 4}</Text>
-              </View>
-            )}
-          </View>
+              {displayedPeople.map((member) => (
+                <TouchableOpacity
+                  key={member.id}
+                  className="w-10 h-10 rounded-full border-[3px] border-black items-center justify-center mr-1"
+                  onPress={() =>
+                    router.push({
+                      pathname: "/persondetails",
+                      params: {
+                        id: member.id,
+                        name: `${member.first_name} ${member.last_name}`,
+                        initials: getInitials(member.first_name, member.last_name),
+                      },
+                    })
+                  }
+                >
+                  <Text className="font-extrabold">
+                    {getInitials(member.first_name, member.last_name)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+
+              {hasOverflow && (
+                <View className="w-10 h-10 rounded-full border-[3px] border-black items-center justify-center mr-1">
+                  <Text className="font-extrabold">
+                    +{(groupData?.members.length || 0) - 4}
+                  </Text>
+                </View>
+              )}
+            </View>
+
         </View>
+
 
         {/* Recent Activity */}
         <View className="mb-6">
