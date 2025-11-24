@@ -115,16 +115,16 @@ export default function PersonDetails() {
       <View className="flex-1">
         {/* Header */}
         <View className="px-6 py-4 border-b border-gray-200">
-          <TouchableOpacity
+          {/* <TouchableOpacity
             onPress={() => router.back()}
             className="mb-4"
           >
             <Text className="text-lg text-blue-500 font-semibold">← Back</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           <View className="flex-row items-center">
-            <View className="w-16 h-16 bg-blue-500 rounded-full items-center justify-center mr-4">
-              <Text className="text-white text-2xl font-bold">
+            <View className="w-16 h-16 border-[3px] border-black rounded-full items-center justify-center mr-4">
+              <Text className="font-extrabold text-2xl">
                 {personInitials}
               </Text>
             </View>
@@ -160,7 +160,7 @@ export default function PersonDetails() {
                   <Text className="text-base font-semibold flex-1 mr-2">
                     {transaction.name}
                   </Text>
-                  <Text className="text-lg font-bold text-blue-600">
+                  <Text className="text-lg font-extrabold">
                     ${getPersonAmount(transaction).toFixed(2)}
                   </Text>
                 </View>
@@ -178,9 +178,9 @@ export default function PersonDetails() {
                       .map((payment) => (
                         <View
                           key={payment.id}
-                          className="w-8 h-8 bg-blue-500 rounded-full items-center justify-center mr-1"
+                          className="w-8 h-8 border-[3px] border-black rounded-full items-center justify-center mr-1"
                         >
-                          <Text className="text-white font-bold text-xs">
+                          <Text className="font-extrabold text-xs">
                             {getInitials(payment.first_name, payment.last_name)}
                           </Text>
                         </View>

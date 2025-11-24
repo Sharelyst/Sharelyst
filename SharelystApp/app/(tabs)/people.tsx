@@ -110,7 +110,10 @@ export default function People() {
   return (
     <SafeAreaView className="flex-1 bg-white">
           <ScrollView className="flex-1 p-4">
-      <Text className="text-2xl font-extrabold mb-4">Group Members</Text>
+            <View className="flex-row justify-center">
+              <Text className="text-2xl font-extrabold mb-4">Group Members</Text>
+            </View>
+      
 
       {members.map((member, index) => (
         <TouchableOpacity
@@ -146,8 +149,8 @@ export default function People() {
             <Text className="text-lg font-bold text-gray-800">
               ${member.totalSpent.toFixed(2)}
             </Text>
-            <Text className="text-xs text-gray-500">spent</Text>
-            <Text className="text-xs text-blue-500 mt-1">View →</Text>
+            {/* <Text className="text-xs text-gray-500">spent</Text> */}
+            {/* <Text className="text-xs text-blue-500 mt-1">View →</Text> */}
           </View>
         </TouchableOpacity>
       ))}
