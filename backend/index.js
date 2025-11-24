@@ -133,7 +133,7 @@ process.on('SIGTERM', () => {
 // Start the server
 const server = app.listen(config.server.port, config.server.host, () => {
   console.log('='.repeat(50));
-  console.log('🚀 Sharelyst Backend Server Started');
+  console.log('Sharelyst Backend Server Started');
   console.log('='.repeat(50));
   console.log(`Environment: ${config.env}`);
   console.log(`Server: http://${config.server.host}:${config.server.port}`);

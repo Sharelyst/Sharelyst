@@ -4,12 +4,12 @@ Production-ready backend API for the Sharelyst application built with Express.js
 
 ## Features
 
-- 🔐 **Secure Authentication** - JWT-based authentication with bcrypt password hashing
-- 🌍 **Environment Configuration** - Separate configs for development and production
-- 🛡️ **Error Handling** - Centralized error handling with custom API errors
-- 🔒 **Security Middleware** - Authentication and validation middleware
-- 📊 **Database** - SQLite with proper indexing and schema
-- 🚀 **Production Ready** - Configured for deployment on Render/Railway/Heroku
+- **Secure Authentication** - JWT-based authentication with bcrypt password hashing
+- **Environment Configuration** - Separate configs for development and production
+- **Error Handling** - Centralized error handling with custom API errors
+- **Security Middleware** - Authentication and validation middleware
+- **Database** - SQLite with proper indexing and schema
+- **Production Ready** - Configured for deployment on Render/Railway/Heroku
 
 ## Tech Stack
 
