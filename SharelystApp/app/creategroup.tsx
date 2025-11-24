@@ -65,7 +65,7 @@ export default function CreateGroup() {
           {/* Success Message */}
           <View className="flex flex-row justify-center mb-8">
             <Text className="text-3xl font-extrabold text-gray-800 text-center">
-              Group Created Successfully! 🎉
+              Group Created Successfully!
             </Text>
           </View>
 

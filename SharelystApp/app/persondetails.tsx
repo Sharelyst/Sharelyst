@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
 import { API_URL } from "@/config/api";
 import { useAuth } from "@/contexts/AuthContext";
@@ -115,12 +116,12 @@ export default function PersonDetails() {
       <View className="flex-1">
         {/* Header */}
         <View className="px-6 py-4 border-b border-gray-200">
-          {/* <TouchableOpacity
+          <TouchableOpacity
             onPress={() => router.back()}
             className="mb-4"
           >
-            <Text className="text-lg text-blue-500 font-semibold">← Back</Text>
-          </TouchableOpacity> */}
+            <Ionicons name="arrow-back" size={24} color="#000" />
+          </TouchableOpacity>
 
           <View className="flex-row items-center">
             <View className="w-16 h-16 border-[3px] border-black rounded-full items-center justify-center mr-4">
