@@ -244,4 +244,112 @@ router.get('/me', authenticateToken, asyncHandler(async (req, res) => {
   });
 }));
 
+/**
+ * PUT /api/auth/profile
+ * Update current user profile
+ * 
+ * Request body:
+ * - firstName: string (optional)
+ * - lastName: string (optional)
+ * - email: string (optional)
+ * - phone: string (optional)
+ * - username: string (optional)
+ * 
+ * Request headers:
+ * - Authorization: Bearer <token>
+ */
+router.put('/profile', authenticateToken, asyncHandler(async (req, res) => {
+  const { firstName, lastName, email, phone, username } = req.body;
+  const userId = req.user.id;
+
+  // Validate at least one field is provided
+  if (!firstName && !lastName && !email && !phone && !username) {
+    throw new ApiError(400, 'At least one field must be provided for update');
+  }
+
+  const db = req.app.get('db');
+
+  // If email is being updated, validate format and check for duplicates
+  if (email) {
+    if (!validateEmail(email)) {
+      throw new ApiError(400, 'Invalid email format');
+    }
+
+    const existingEmail = await new Promise((resolve, reject) => {
+      db.get(
+        'SELECT id FROM users WHERE email = ? AND id != ?',
+        [email, userId],
+        (err, row) => {
+          if (err) reject(err);
+          else resolve(row);
+        }
+      );
+    });
+
+    if (existingEmail) {
+      throw new ApiError(409, 'Email already exists');
+    }
+  }
+
+  // If username is being updated, check for duplicates
+  if (username) {
+    const existingUsername = await new Promise((resolve, reject) => {
+      db.get(
+        'SELECT id FROM users WHERE username = ? AND id != ?',
+        [username, userId],
+        (err, row) => {
+          if (err) reject(err);
+          else resolve(row);
+        }
+      );
+    });
+
+    if (existingUsername) {
+      throw new ApiError(409, 'Username already exists');
+    }
+  }
+
+  // Build dynamic update query
+  const updates = {};
+  if (firstName !== undefined) updates.first_name = firstName;
+  if (lastName !== undefined) updates.last_name = lastName;
+  if (email !== undefined) updates.email = email;
+  if (phone !== undefined) updates.phone = phone;
+  if (username !== undefined) updates.username = username;
+
+  const fields = Object.keys(updates)
+    .map((key, index) => `${key} = ?`)
+    .join(', ');
+  const values = [...Object.values(updates), userId];
+
+  await new Promise((resolve, reject) => {
+    db.run(
+      `UPDATE users SET ${fields} WHERE id = ?`,
+      values,
+      (err) => {
+        if (err) reject(err);
+        else resolve();
+      }
+    );
+  });
+
+  // Fetch updated user data
+  const updatedUser = await new Promise((resolve, reject) => {
+    db.get(
+      'SELECT id, username, first_name, last_name, email, phone, created_at FROM users WHERE id = ?',
+      [userId],
+      (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      }
+    );
+  });
+
+  res.status(200).json({
+    success: true,
+    message: 'Profile updated successfully',
+    data: updatedUser,
+  });
+}));
+
 module.exports = router;

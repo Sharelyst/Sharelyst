@@ -51,55 +51,96 @@ interface Transaction {
   created_at: string;
 }
 
+interface UserSpending {
+  id: number;
+  username: string;
+  first_name: string;
+  last_name: string;
+  total_spent: number;
+}
+
 export default function Home() {
   const router = useRouter();
   const { token } = useAuth();
   const [groupData, setGroupData] = useState<GroupData | null>(null);
   const [totalBill, setTotalBill] = useState<number>(0);
   const [recentActivities, setRecentActivities] = useState<Transaction[]>([]);
+  const [userSpendings, setUserSpendings] = useState<UserSpending[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useFocusEffect(
     React.useCallback(() => {
-      fetchGroupData();
-    }, [])
+      if (token) {
+        fetchGroupData();
+      }
+    }, [token])
   );
 
   const fetchGroupData = async () => {
+    if (!token) {
+      console.log("No token available, skipping fetch");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
-      const [groupResponse, totalResponse, activitiesResponse] = await Promise.all([
-        axios.get(`${API_URL}/groups/my-group`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }),
-        axios.get(`${API_URL}/transactions/total`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }),
-        axios.get(`${API_URL}/transactions/my-group`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }),
-      ]);
+      
+      // Fetch group data first
+      const groupResponse = await axios.get(`${API_URL}/groups/my-group`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-      if (groupResponse.data.success && groupResponse.data.data) {
-        setGroupData(groupResponse.data.data);
-      }
+      if (groupResponse.data.success) {
+        if (groupResponse.data.data) {
+          setGroupData(groupResponse.data.data);
+          
+          // Only fetch transactions if user is in a group
+          try {
+            const [totalResponse, activitiesResponse, spendingsResponse] = await Promise.all([
+              axios.get(`${API_URL}/transactions/total`, {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }),
+              axios.get(`${API_URL}/transactions/my-group`, {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }),
+              axios.get(`${API_URL}/transactions/user-spendings`, {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }),
+            ]);
 
-      if (totalResponse.data.success) {
-        setTotalBill(totalResponse.data.data.total || 0);
-      }
+            if (totalResponse.data.success) {
+              setTotalBill(totalResponse.data.data.total || 0);
+            }
 
-      if (activitiesResponse.data.success) {
-        // Get only the 5 most recent activities
-        setRecentActivities(activitiesResponse.data.data.slice(0, 5));
+            if (activitiesResponse.data.success) {
+              // Get only the 5 most recent activities
+              setRecentActivities(activitiesResponse.data.data.slice(0, 5));
+            }
+
+            if (spendingsResponse.data.success) {
+              setUserSpendings(spendingsResponse.data.data);
+            }
+          } catch (transactionError) {
+            console.error("Error fetching transaction data:", transactionError);
+            // Don't fail the whole page if transactions fail
+          }
+        } else {
+          // User is not in a group
+          setGroupData(null);
+        }
       }
     } catch (error) {
       console.error("Error fetching group data:", error);
+      // Don't set groupData to null on error, keep previous state
     } finally {
       setIsLoading(false);
     }
@@ -116,6 +157,39 @@ export default function Home() {
     return (
       <SafeAreaView className="flex-1 bg-white items-center justify-center">
         <ActivityIndicator size="large" color="#007AFF" />
+      </SafeAreaView>
+    );
+  }
+
+  if (!groupData) {
+    return (
+      <SafeAreaView className="flex-1 bg-white">
+        <View className="flex flex-row justify-center py-4">
+          <Text className="text-3xl font-extrabold">No Group</Text>
+        </View>
+        
+        <View className="flex-1 items-center justify-center px-6">
+          <Text className="text-xl font-semibold mb-4 text-center">
+            You're not in a group yet
+          </Text>
+          <Text className="text-gray-500 text-center mb-6">
+            Create a new group or join an existing one to start tracking expenses
+          </Text>
+          
+          <TouchableOpacity
+            className="bg-blue-500 py-3 px-6 rounded-lg mb-3"
+            onPress={() => router.push("/creategroup")}
+          >
+            <Text className="text-white font-semibold text-base">Create Group</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            className="bg-gray-200 py-3 px-6 rounded-lg"
+            onPress={() => router.push("/findgroup")}
+          >
+            <Text className="text-gray-700 font-semibold text-base">Join Group</Text>
+          </TouchableOpacity>
+        </View>
       </SafeAreaView>
     );
   }
@@ -219,6 +293,50 @@ export default function Home() {
                         </Text>
                       </View>
                     ))}
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
+          )}
+        </View>
+
+        {/* Spendings */}
+        <View className="mb-6">
+          <Text className="text-lg font-extrabold mb-3">Spendings</Text>
+          
+          {userSpendings.length === 0 ? (
+            <View className="py-8 items-center">
+              <Text className="text-gray-500 text-base">No spending data available</Text>
+            </View>
+          ) : (
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              className="-mx-2"
+            >
+              {userSpendings.map((user) => (
+                <View
+                  key={user.id}
+                  className="bg-neutral-100 p-4 rounded-2xl mr-3 ml-2"
+                  style={{ width: 200 }}
+                >
+                  <View className="items-center mb-3">
+                    <View className="w-12 h-12 rounded-full border-[3px] border-black items-center justify-center">
+                      <Text className="text-base font-extrabold">
+                        {getInitials(user.first_name, user.last_name)}
+                      </Text>
+                    </View>
+                  </View>
+                  <View>
+                    <Text className="text-base font-semibold text-center" numberOfLines={1}>
+                      {user.first_name} {user.last_name}
+                    </Text>
+                    <Text className="text-sm text-gray-600 text-center mb-2" numberOfLines={1}>
+                      @{user.username}
+                    </Text>
+                    <Text className="text-2xl font-extrabold text-center">
+                      ${user.total_spent.toFixed(2)}
+                    </Text>
                   </View>
                 </View>
               ))}

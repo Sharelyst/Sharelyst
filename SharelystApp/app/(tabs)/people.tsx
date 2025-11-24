@@ -37,11 +37,19 @@ export default function People() {
 
   useFocusEffect(
     React.useCallback(() => {
-      fetchGroupMembers();
-    }, [])
+      if (token) {
+        fetchGroupMembers();
+      }
+    }, [token])
   );
 
   const fetchGroupMembers = async () => {
+    if (!token) {
+      console.log("No token available, skipping fetch");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
       const [groupResponse, transactionsResponse] = await Promise.all([
@@ -102,7 +110,10 @@ export default function People() {
   return (
     <SafeAreaView className="flex-1 bg-white">
           <ScrollView className="flex-1 p-4">
-      <Text className="text-2xl font-extrabold mb-4">Group Members</Text>
+            <View className="flex-row justify-center">
+              <Text className="text-2xl font-extrabold mb-4">Group Members</Text>
+            </View>
+      
 
       {members.map((member, index) => (
         <TouchableOpacity
@@ -119,8 +130,8 @@ export default function People() {
             })
           }
         >
-          <View className="w-12 h-12 bg-blue-500 rounded-full justify-center items-center mr-4">
-            <Text className="text-white text-base font-bold">
+          <View className="w-12 h-12 rounded-full border-[3px] border-black items-center justify-center mr-4">
+            <Text className="text-black text-base font-extrabold">
               {getInitials(member.first_name, member.last_name)}
             </Text>
           </View>
@@ -138,8 +149,8 @@ export default function People() {
             <Text className="text-lg font-bold text-gray-800">
               ${member.totalSpent.toFixed(2)}
             </Text>
-            <Text className="text-xs text-gray-500">spent</Text>
-            <Text className="text-xs text-blue-500 mt-1">View →</Text>
+            {/* <Text className="text-xs text-gray-500">spent</Text> */}
+            {/* <Text className="text-xs text-blue-500 mt-1">View →</Text> */}
           </View>
         </TouchableOpacity>
       ))}

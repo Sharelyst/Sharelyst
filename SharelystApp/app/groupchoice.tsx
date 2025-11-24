@@ -12,10 +12,20 @@ export default function GroupChoice() {
   const router = useRouter();
 
   useEffect(() => {
-    checkExistingGroup();
-  }, []);
+    if (token) {
+      checkExistingGroup();
+    } else {
+      setIsCheckingGroup(false);
+    }
+  }, [token]);
 
   const checkExistingGroup = async () => {
+    if (!token) {
+      console.log("No token available, skipping check");
+      setIsCheckingGroup(false);
+      return;
+    }
+
     try {
       const response = await axios.get(`${API_URL}/groups/my-group`, {
         headers: {

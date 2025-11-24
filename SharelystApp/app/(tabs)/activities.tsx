@@ -33,11 +33,19 @@ export default function ActivitiesScreen() {
 
   useFocusEffect(
     React.useCallback(() => {
-      fetchActivities();
-    }, [])
+      if (token) {
+        fetchActivities();
+      }
+    }, [token])
   );
 
   const fetchActivities = async () => {
+    if (!token) {
+      console.log("No token available, skipping fetch");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
       const response = await axios.get(`${API_URL}/transactions/my-group`, {
@@ -71,7 +79,7 @@ export default function ActivitiesScreen() {
   return (
     <SafeAreaView className="flex-1 bg-white">
       <View className="flex-1">
-        <View className="px-4 py-3 flex-row items-center justify-between">
+        <View className="px-4 py-3 flex-row items-center justify-center">
           <Text className="text-2xl font-extrabold">Activities</Text>
         </View>
 
@@ -85,7 +93,11 @@ export default function ActivitiesScreen() {
             </View>
           ) : (
             activities.map((activity) => (
-              <View key={activity.id} className="bg-neutral-100 p-4 rounded-2xl mb-3">
+              <Pressable
+                key={activity.id}
+                onPress={() => router.push(`/activitydetails?id=${activity.id}`)}
+                className="bg-neutral-100 p-4 rounded-2xl mb-3 active:bg-neutral-200"
+              >
                 <Text className="text-base font-semibold mb-1">
                   {activity.name}
                 </Text>
@@ -98,21 +110,21 @@ export default function ActivitiesScreen() {
                   {activity.payments.map((payment) => (
                     <View
                       key={payment.id}
-                      className="w-10 h-10 bg-blue-500 rounded-full items-center justify-center mr-2 mb-2"
+                      className="w-10 h-10 border-[3px] border-black rounded-full items-center justify-center mr-2 mb-2"
                     >
-                      <Text className="text-white font-semibold text-xs">
+                      <Text className="font-extrabold text-xs">
                         {getInitials(payment.first_name, payment.last_name)}
                       </Text>
                     </View>
                   ))}
                 </View>
-              </View>
+              </Pressable>
             ))
           )}
         </ScrollView>
 
         {/* Floating Add Button */}
-        <TouchableOpacity
+        {/* <TouchableOpacity
           className="absolute bottom-6 right-6 bg-blue-500 w-16 h-16 rounded-full items-center justify-center shadow-lg"
           onPress={() => router.push("/addactivity")}
           style={{
@@ -124,7 +136,7 @@ export default function ActivitiesScreen() {
           }}
         >
           <Text className="text-white text-4xl font-light">+</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
     </SafeAreaView>
   );

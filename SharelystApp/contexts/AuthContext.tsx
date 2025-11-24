@@ -13,6 +13,7 @@ const API_BASE_URL = API_URL;
 
 // Token storage key
 const TOKEN_KEY = "auth_token";
+const NAV_PREFERENCE_KEY = "nav_preference";
 
 interface User {
   id: number;
@@ -20,11 +21,15 @@ interface User {
   email: string;
 }
 
+type NavigationPreference = "navbar" | "hamburger";
+
 interface AuthContextType {
   user: User | null;
   token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  navigationPreference: NavigationPreference;
+  setNavigationPreference: (preference: NavigationPreference) => Promise<void>;
   login: (identifier: string, password: string) => Promise<void>;
   register: (
     username: string,
@@ -46,11 +51,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [isRegistering, setIsRegistering] = React.useState(false);
+  const [navigationPreference, setNavigationPreferenceState] = React.useState<NavigationPreference>("navbar");
 
-  // Load token from secure storage on mount
+  // Load token and navigation preference from secure storage on mount
   React.useEffect(() => {
     loadToken();
+    loadNavigationPreference();
   }, []);
+
+  /**
+   * Load navigation preference from secure storage
+   */
+  const loadNavigationPreference = async () => {
+    try {
+      const storedPreference = await SecureStore.getItemAsync(NAV_PREFERENCE_KEY);
+      if (storedPreference === "navbar" || storedPreference === "hamburger") {
+        setNavigationPreferenceState(storedPreference);
+      }
+    } catch (error) {
+      console.error("Error loading navigation preference:", error);
+    }
+  };
+
+  /**
+   * Update navigation preference
+   */
+  const setNavigationPreference = async (preference: NavigationPreference) => {
+    try {
+      await SecureStore.setItemAsync(NAV_PREFERENCE_KEY, preference);
+      setNavigationPreferenceState(preference);
+    } catch (error) {
+      console.error("Error saving navigation preference:", error);
+    }
+  };
 
   /**
    * Load token from secure storage and verify it
@@ -305,6 +338,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     token,
     isLoading,
     isAuthenticated: !!token && !!user,
+    navigationPreference,
+    setNavigationPreference,
     login,
     register,
     logout,
