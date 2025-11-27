@@ -7,6 +7,8 @@ import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { ConnectionStatusProvider } from '../contexts/ConnectionStatusContext';
+import { ConnectionStatus } from '../components/ConnectionStatus';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -20,24 +22,17 @@ function RootLayoutNav() {
   const { isAuthenticated, isLoading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
-
+  // ...existing code...
   React.useEffect(() => {
     if (isLoading) {
-      // Still checking authentication status
       return;
     }
-
     const inAuthGroup = segments[0] === '(tabs)';
     const inGroupFlow = segments[0] === 'groupchoice' || segments[0] === 'creategroup' || segments[0] === 'findgroup';
-
     if (!isAuthenticated) {
-      // User is not authenticated, redirect to login
       if (segments[0] !== 'login' && segments[0] !== 'register') {
         router.replace('/login');
       }
-    } else {
-      // User is authenticated, allow navigation to proceed
-      // Group check will be handled by the groupchoice page
     }
   }, [isAuthenticated, segments, isLoading]);
 
@@ -53,6 +48,7 @@ function RootLayoutNav() {
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
       </Stack>
       <StatusBar style="auto" />
+      <ConnectionStatus />
     </ThemeProvider>
   );
 }
@@ -63,7 +59,9 @@ function RootLayoutNav() {
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <RootLayoutNav />
+      <ConnectionStatusProvider>
+        <RootLayoutNav />
+      </ConnectionStatusProvider>
     </AuthProvider>
   );
 }

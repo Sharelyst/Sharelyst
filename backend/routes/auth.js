@@ -352,4 +352,9 @@ router.put('/profile', authenticateToken, asyncHandler(async (req, res) => {
   });
 }));
 
+// Health check endpoint to verify frontend-backend connectivity
+router.get('/ping', (req, res) => {
+  res.json({ success: true, message: 'Backend is reachable.' });
+});
+
 module.exports = router;
