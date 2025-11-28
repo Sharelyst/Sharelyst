@@ -9,7 +9,7 @@ const getApiUrl = (): string => {
   // For development:
   // IP address is automatically updated by scripts/update-ip.js
   // Run 'npm start' to auto-detect your computer's IP
-  return 'http://172.20.10.2:3000/api';
+  return 'https://sharelystbackend.onrender.com/api';
 };
 
 // Fallback URLs to try if the primary URL fails
