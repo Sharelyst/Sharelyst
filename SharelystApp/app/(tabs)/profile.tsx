@@ -16,10 +16,18 @@ interface UserProfile {
   phone: string | null;
 }
 
+interface GroupInfo {
+  id: number;
+  groupCode: number;
+  name: string;
+  description: string | null;
+}
+
 export default function ProfileScreen() {
   const { logout, token, user, navigationPreference, setNavigationPreference } = useAuth();
   const [isLeavingGroup, setIsLeavingGroup] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [groupInfo, setGroupInfo] = useState<GroupInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -34,6 +42,7 @@ export default function ProfileScreen() {
   useEffect(() => {
     if (token) {
       fetchUserProfile();
+      fetchGroupInfo();
     }
   }, [token, user]);
 
@@ -68,6 +77,32 @@ export default function ProfileScreen() {
       console.error("Error fetching user profile:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchGroupInfo = async () => {
+    if (!token) {
+      return;
+    }
+
+    try {
+      const response = await axios.get(
+        `${API_URL}/groups/my-group`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success && response.data.data) {
+        setGroupInfo(response.data.data);
+      } else {
+        setGroupInfo(null);
+      }
+    } catch (error) {
+      console.error("Error fetching group info:", error);
+      setGroupInfo(null);
     }
   };
 
@@ -152,6 +187,7 @@ export default function ProfileScreen() {
               );
 
               if (response.data.success) {
+                setGroupInfo(null); // Clear group info
                 Alert.alert("Success", "You have left the group", [
                   {
                     text: "OK",
@@ -370,6 +406,19 @@ export default function ProfileScreen() {
             {/* Actions Section */}
             <View className="w-full mb-8">
               <Text className="text-xl font-bold mb-4">Actions</Text>
+              
+              {/* Group Code Display */}
+              {groupInfo && (
+                <View className="mb-3 bg-gray-100 rounded-xl p-4 border border-gray-300">
+                  <Text className="text-sm font-semibold text-gray-700 mb-1">Group Code</Text>
+                  <Text className="text-2xl font-bold text-center text-blue-600">
+                    {groupInfo.groupCode}
+                  </Text>
+                  <Text className="text-xs text-gray-500 text-center mt-1">
+                    Share this code with others to join your group
+                  </Text>
+                </View>
+              )}
               
               {/* Leave Group Button */}
               <TouchableOpacity
